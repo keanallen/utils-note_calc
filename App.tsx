@@ -121,16 +121,6 @@ const App: React.FC = () => {
       <header className="p-4 bg-gray-800/50 backdrop-blur-sm border-b border-gray-700 flex justify-between items-center sticky top-0 z-10">
         <div className="flex items-center gap-4">
           <h1 className="text-xl font-bold text-cyan-400">All-In-One Calculator and Note-Taking App</h1>
-          {activeCalculatorId && (
-            <span className="text-sm text-gray-400 bg-gray-700 px-2 py-1 rounded-lg">
-              ⌨️ Active Calculator: #{calculators.findIndex(calc => calc.id === activeCalculatorId) + 1}
-            </span>
-          )}
-          {temporarilyInactiveCalculatorId && !activeCalculatorId && (
-            <span className="text-sm text-gray-400 bg-orange-700/50 px-2 py-1 rounded-lg">
-              📝 Editing Notes
-            </span>
-          )}
         </div>
         <button
           onClick={addCalculator}
