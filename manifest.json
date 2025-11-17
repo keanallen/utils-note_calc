@@ -1,14 +1,24 @@
 {
   "short_name": "Note Calc",
-  "name": "Note Calc: PWA Multi-Calculator & Notes",
+  "name": "Note Calc — All-In-One Calculator and Note-Taking App",
   "icons": [
     {
-      "src": "https://via.placeholder.com/192x192.png/1a202c/FFFFFF?text=NC",
+      "src": "/assets/icon-192.webp",
+      "type": "image/webp",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/assets/icon-192.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "https://via.placeholder.com/512x512.png/1a202c/FFFFFF?text=Note+Calc",
+      "src": "/assets/icon-512.webp",
+      "type": "image/webp",
+      "sizes": "512x512"
+    },
+    {
+      "src": "/assets/icon-512.png",
       "type": "image/png",
       "sizes": "512x512"
     }

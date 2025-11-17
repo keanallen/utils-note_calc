@@ -37,7 +37,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-white font-sans flex flex-col">
       <header className="p-4 bg-gray-800/50 backdrop-blur-sm border-b border-gray-700 flex justify-between items-center sticky top-0 z-10">
-        <h1 className="text-xl font-bold text-cyan-400">Note Calc</h1>
+        <h1 className="text-xl font-bold text-cyan-400">All-In-One Calculator and Note-Taking App</h1>
         <button
           onClick={addCalculator}
           className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg flex items-center transition-transform transform hover:scale-105"

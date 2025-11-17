@@ -4,9 +4,18 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Note Calc - The Ultimate PWA Calculator with Notes</title>
-    <meta name="description" content="Note Calc is a powerful Progressive Web App (PWA) that lets you open multiple calculators and take rich-text notes simultaneously. Installable, offline-ready, and perfect for multitasking." />
-    <meta name="keywords" content="pwa calculator, multi-calculator, calculator with notes, note taking app, offline calculator, installable web app, rich text editor, Note Calc" />
+    <title>Note Calc — All-In-One Calculator and Note-Taking App</title>
+    <link rel="icon" type="image/webp" href="/assets/icon-192.webp">
+    <link rel="icon" type="image/png" href="/assets/icon-192.png">
+    <link rel="apple-touch-icon" href="/assets/icon-192.png">
+    <meta name="description" content="Note Calc is an all-in-one App that lets you open multiple calculators, take rich-text notes, and work offline. A fast, installable productivity app for students, professionals, and multitaskers." />
+    <meta name="keywords" content="calculator with notes, multi calculator app, note taking calculator, pwa calculator, offline calculator, productivity app, rich text notes, Note Calc" />
+    <meta property="og:image" content="/assets/banner-1200x630.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="/assets/banner-1200x630.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#1a202c">
@@ -28,6 +37,43 @@
   }
 }
 </script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Note Calc",
+  "applicationCategory": "ProductivityApplication",
+  "operatingSystem": "Any (Web App, PWA)",
+  "description": "Note Calc is an all-in-one App that lets you open multiple calculators, take rich-text notes, and work offline. A fast, installable productivity app for students, professionals, and multitaskers.",
+  "url": "https://notecalc.kwikweb.ph",
+  "image": "https://yourdomain.com/assets/og-image.png",
+  "softwareVersion": "1.0.0",
+  "author": {
+    "@type": "Person",
+    "name": "Kean Allen Imam"
+  },
+  "creator": {
+    "@type": "Organization",
+    "name": "KwikWeb",
+    "url": "https://kwikweb.ph"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "Multi-calculator window support",
+    "Rich-text note-taking editor",
+    "Offline-ready PWA",
+    "Installable on desktop and mobile",
+    "Fast real-time calculations",
+    "Responsive, minimalist UI"
+  ]
+}
+</script>
+
 
     <style>
       .ql-toolbar {
