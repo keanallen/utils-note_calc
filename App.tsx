@@ -12,6 +12,7 @@ const App: React.FC = () => {
   const [calculators, setCalculators] = useState<{ id: number }[]>([{ id: initialId }]);
   const [notes, setNotes] = useState<string>('');
   const [activeCalculatorId, setActiveCalculatorId] = useState<number | null>(initialId);
+  const [temporarilyInactiveCalculatorId, setTemporarilyInactiveCalculatorId] = useState<number | null>(null);
   const calculatorRefs = useRef<Map<number, CalculatorRef>>(new Map());
 
   useEffect(() => {
@@ -37,7 +38,17 @@ const App: React.FC = () => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Only handle keyboard input if there's an active calculator and not typing in notes
-      if (!activeCalculatorId || event.target instanceof HTMLTextAreaElement) {
+      if (!activeCalculatorId) return;
+      
+      // Check if user is typing in any input field, textarea, or contenteditable element
+      const target = event.target as HTMLElement;
+      const isEditableElement = target instanceof HTMLTextAreaElement || 
+                               target instanceof HTMLInputElement || 
+                               (target as any).isContentEditable ||
+                               target.closest('.ql-editor') || // Quill editor
+                               target.closest('[contenteditable]');
+      
+      if (isEditableElement) {
         return;
       }
 
@@ -77,6 +88,20 @@ const App: React.FC = () => {
     calculatorRefs.current.delete(id);
   }, []);
 
+  const handleNotesFocus = useCallback(() => {
+    if (activeCalculatorId) {
+      setTemporarilyInactiveCalculatorId(activeCalculatorId);
+      setActiveCalculatorId(null);
+    }
+  }, [activeCalculatorId]);
+
+  const handleNotesBlur = useCallback(() => {
+    if (temporarilyInactiveCalculatorId) {
+      setActiveCalculatorId(temporarilyInactiveCalculatorId);
+      setTemporarilyInactiveCalculatorId(null);
+    }
+  }, [temporarilyInactiveCalculatorId]);
+
   const addCalculator = useCallback(() => {
     const newId = Date.now();
     setCalculators(prev => [...prev, { id: newId }]);
@@ -99,6 +124,11 @@ const App: React.FC = () => {
           {activeCalculatorId && (
             <span className="text-sm text-gray-400 bg-gray-700 px-2 py-1 rounded-lg">
               ⌨️ Active Calculator: #{calculators.findIndex(calc => calc.id === activeCalculatorId) + 1}
+            </span>
+          )}
+          {temporarilyInactiveCalculatorId && !activeCalculatorId && (
+            <span className="text-sm text-gray-400 bg-orange-700/50 px-2 py-1 rounded-lg">
+              📝 Editing Notes
             </span>
           )}
         </div>
@@ -149,7 +179,12 @@ const App: React.FC = () => {
           </div>
         </div>
         <div className="flex-shrink-0 md:w-2/5 lg:w-1/3 h-64 md:h-auto">
-          <Notes value={notes} onChange={setNotes} />
+          <Notes 
+            value={notes} 
+            onChange={setNotes}
+            onFocus={handleNotesFocus}
+            onBlur={handleNotesBlur}
+          />
         </div>
       </main>
     </div>

@@ -9,6 +9,8 @@ declare const htmlToDocx: any;
 interface NotesProps {
   value: string;
   onChange: (value: string) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 const QuillToolbar = () => (
@@ -42,7 +44,7 @@ const QuillToolbar = () => (
 );
 
 
-const Notes: React.FC<NotesProps> = ({ value, onChange }) => {
+const Notes: React.FC<NotesProps> = ({ value, onChange, onFocus, onBlur }) => {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const quillInstance = useRef<any>(null);
 
@@ -83,9 +85,20 @@ const Notes: React.FC<NotesProps> = ({ value, onChange }) => {
         }
       });
       
+      // Add focus/blur handlers for calculator interaction
+      if (onFocus) {
+        quill.on('selection-change', (range) => {
+          if (range) {
+            onFocus();
+          } else if (onBlur) {
+            onBlur();
+          }
+        });
+      }
+      
       quillInstance.current = quill;
     }
-  }, [value, onChange]);
+  }, [value, onChange, onFocus, onBlur]);
 
   const handleCopy = useCallback(() => {
     if (quillInstance.current) {
