@@ -1,6 +1,64 @@
 
-import React, { useState, useCallback, useImperativeHandle, forwardRef, useEffect } from 'react';
+import React, { useState, useCallback, useImperativeHandle, forwardRef, useEffect, useRef } from 'react';
 import { CloseIcon } from './icons';
+
+const formatNumber = (value: string | number): string => {
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  
+  // If it's not a valid number, return original string
+  if (isNaN(num)) return String(value);
+  
+  // If it's a whole number, show without decimal places
+  if (Number.isInteger(num)) {
+    return num.toLocaleString('en-US');
+  }
+  
+  // For decimal numbers, format with comma separators but preserve decimal precision
+  // Remove trailing zeros after decimal point
+  const formatted = num.toLocaleString('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 10
+  });
+  
+  return formatted;
+};
+
+const formatDisplayNumber = (value: string): string => {
+  // Don't format if it ends with a decimal point or is being typed
+  if (value.endsWith('.') || value === '' || value === '0') {
+    return value;
+  }
+  
+  const num = parseFloat(value);
+  if (isNaN(num)) return value;
+  
+  return formatNumber(num);
+};
+
+const formatExpression = (expr: string): string => {
+  // Split expression by operators while preserving them and spaces
+  const parts = expr.split(/(\s*[+\-×÷]\s*)/);
+  
+  return parts.map(part => {
+    const trimmed = part.trim();
+    
+    // If it's empty, a space, or an operator, return as-is
+    if (trimmed === '' || ['+', '-', '×', '÷'].includes(trimmed)) {
+      return part;
+    }
+    
+    // If it looks like a number (including formatted numbers with commas), format it
+    const cleanNumber = trimmed.replace(/,/g, '');
+    const num = parseFloat(cleanNumber);
+    
+    if (!isNaN(num) && cleanNumber !== '') {
+      return formatNumber(num);
+    }
+    
+    // Return the original part if it's not a recognizable number
+    return part;
+  }).join('');
+};
 
 interface CalculatorProps {
   id: number;
@@ -29,6 +87,29 @@ const Calculator: React.FC<CalculatorProps> = ({
   const [currentInput, setCurrentInput] = useState('0');
   const [showingResult, setShowingResult] = useState(false);
   const [resultFormula, setResultFormula] = useState('');
+  const [isFormattedResult, setIsFormattedResult] = useState(false);
+  const displayRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll display to the right when content changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      // Scroll the text container to show the latest input
+      if (textRef.current) {
+        const element = textRef.current;
+        console.log('Scrolling text - scrollWidth:', element.scrollWidth, 'clientWidth:', element.clientWidth);
+        element.scrollLeft = element.scrollWidth;
+      }
+      
+      // Also try scrolling the main display as fallback
+      if (displayRef.current) {
+        const element = displayRef.current;
+        element.scrollLeft = element.scrollWidth;
+      }
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
+  }, [display]);
 
   const calculate = (val1: number, val2: number, op: string): number => {
     switch (op) {
@@ -50,25 +131,32 @@ const Calculator: React.FC<CalculatorProps> = ({
       setResultFormula('');
       setWaitingForOperand(false);
       setShowingOperator(false);
+      setIsFormattedResult(false);
     } else if (waitingForOperand || showingOperator) {
       setCurrentInput(digit);
       if (expression === '') {
         // Starting fresh
         setDisplay(digit);
       } else {
-        // After operator
-        setDisplay(expression + digit);
+        // After operator - format the previous expression and show current digit
+        const formattedExpression = formatExpression(expression.slice(0, -3)); // Remove " + " part
+        setDisplay(formattedExpression + ' ' + expression.slice(-3) + digit); // Add back operator and new digit
       }
       setWaitingForOperand(false);
       setShowingOperator(false);
+      setIsFormattedResult(false);
     } else {
       const newInput = currentInput === '0' ? digit : currentInput + digit;
       setCurrentInput(newInput);
+      const formattedInput = formatDisplayNumber(newInput);
       if (expression === '') {
-        setDisplay(newInput);
+        setDisplay(formattedInput);
       } else {
-        setDisplay(expression + newInput);
+        // Format the existing expression but keep current input unformatted while typing
+        const formattedExpression = formatExpression(expression.slice(0, -3)); // Remove " + " part
+        setDisplay(formattedExpression + ' ' + expression.slice(-3) + formattedInput);
       }
+      setIsFormattedResult(false);
     }
   }, [expression, currentInput, waitingForOperand, showingOperator, showingResult]);
 
@@ -82,47 +170,65 @@ const Calculator: React.FC<CalculatorProps> = ({
       setResultFormula('');
       setWaitingForOperand(false);
       setShowingOperator(false);
+      setIsFormattedResult(false);
     } else if (showingOperator || waitingForOperand) {
       setCurrentInput('0.');
       if (expression === '') {
         setDisplay('0.');
       } else {
-        setDisplay(expression + '0.');
+        const formattedExpression = formatExpression(expression.slice(0, -3));
+        setDisplay(formattedExpression + ' ' + expression.slice(-3) + '0.');
       }
       setWaitingForOperand(false);
       setShowingOperator(false);
+      setIsFormattedResult(false);
     } else if (!currentInput.includes('.')) {
       const newInput = currentInput + '.';
       setCurrentInput(newInput);
       if (expression === '') {
         setDisplay(newInput);
       } else {
-        setDisplay(expression + newInput);
+        const formattedExpression = formatExpression(expression.slice(0, -3));
+        setDisplay(formattedExpression + ' ' + expression.slice(-3) + newInput);
       }
+      setIsFormattedResult(false);
     }
   }, [expression, currentInput, showingOperator, waitingForOperand, showingResult]);
 
   const handleOperator = useCallback((nextOperator: string) => {
     if (showingResult) {
-      // Continue from result
-      setExpression(currentInput + ' ' + nextOperator + ' ');
-      setDisplay(currentInput + ' ' + nextOperator + ' ');
-      setPreviousValue(parseFloat(currentInput));
+      // Continue from result - use raw value for calculation, formatted for display
+      const rawValue = parseFloat(currentInput.replace(/,/g, ''));
+      const formattedInput = formatNumber(rawValue);
+      setExpression(String(rawValue) + ' ' + nextOperator + ' ');
+      setDisplay(formattedInput + ' ' + nextOperator + ' ');
+      setPreviousValue(rawValue);
       setShowingResult(false);
       setResultFormula('');
     } else {
-      const inputValue = parseFloat(currentInput);
+      const inputValue = parseFloat(currentInput.replace(/,/g, ''));
       
       if (operator && previousValue !== null && !waitingForOperand) {
         const result = calculate(previousValue, inputValue, operator);
-        setExpression(expression + currentInput + ' ' + nextOperator + ' ');
-        setDisplay(expression + currentInput + ' ' + nextOperator + ' ');
+        const formattedResult = formatNumber(result);
+        const newExpression = expression + String(inputValue) + ' ' + nextOperator + ' ';
+        setExpression(newExpression);
+        
+        // Format the display version
+        const formattedExpression = formatExpression(expression + String(inputValue));
+        setDisplay(formattedExpression + ' ' + nextOperator + ' ');
+        
         setPreviousValue(result);
         setCurrentInput(String(result));
       } else {
-        const newExpression = expression + currentInput + ' ' + nextOperator + ' ';
+        const newExpression = expression + String(inputValue) + ' ' + nextOperator + ' ';
         setExpression(newExpression);
-        setDisplay(newExpression);
+        
+        // Format for display
+        const formattedInput = formatNumber(inputValue);
+        const currentDisplay = expression ? formatExpression(expression) + formattedInput : formattedInput;
+        setDisplay(currentDisplay + ' ' + nextOperator + ' ');
+        
         setPreviousValue(inputValue);
       }
     }
@@ -130,22 +236,29 @@ const Calculator: React.FC<CalculatorProps> = ({
     setWaitingForOperand(true);
     setOperator(nextOperator);
     setShowingOperator(true);
+    setIsFormattedResult(false);
   }, [expression, currentInput, operator, previousValue, waitingForOperand, showingResult]);
   
   const handleEquals = useCallback(() => {
-    const inputValue = parseFloat(currentInput);
+    const inputValue = parseFloat(currentInput.replace(/,/g, ''));
     if (operator && previousValue !== null) {
       const result = calculate(previousValue, inputValue, operator);
-      const formula = expression + currentInput;
-      setResultFormula(formula);
-      setDisplay(String(result));
+      const formattedResult = formatNumber(result);
+      
+      // Create formatted formula for display
+      const rawFormula = expression + String(inputValue);
+      const formattedFormula = formatExpression(rawFormula);
+      
+      setResultFormula(formattedFormula);
+      setDisplay(formattedResult);
       setShowingResult(true);
       setExpression('');
-      setCurrentInput(String(result));
+      setCurrentInput(String(result)); // Store raw result for further calculations
       setPreviousValue(null);
       setOperator(null);
       setWaitingForOperand(true);
       setShowingOperator(false);
+      setIsFormattedResult(true);
     }
   }, [expression, currentInput, operator, previousValue]);
 
@@ -160,10 +273,13 @@ const Calculator: React.FC<CalculatorProps> = ({
     setCurrentInput('0');
     setShowingResult(false);
     setResultFormula('');
+    setIsFormattedResult(false);
   }, []);
 
   const handlePlusMinus = useCallback(() => {
-    const newInput = String(parseFloat(currentInput) * -1);
+    const rawValue = parseFloat(currentInput.replace(/,/g, ''));
+    const newValue = rawValue * -1;
+    const newInput = formatNumber(newValue);
     setCurrentInput(newInput);
     if (showingResult) {
       setDisplay(newInput);
@@ -173,12 +289,16 @@ const Calculator: React.FC<CalculatorProps> = ({
     } else if (expression === '') {
       setDisplay(newInput);
     } else {
-      setDisplay(expression + newInput);
+      const formattedExpression = formatExpression(expression.trim());
+      setDisplay(formattedExpression + ' ' + newInput);
     }
+    setIsFormattedResult(true);
   }, [expression, currentInput, showingResult]);
 
   const handlePercent = useCallback(() => {
-    const newInput = String(parseFloat(currentInput) / 100);
+    const rawValue = parseFloat(currentInput.replace(/,/g, ''));
+    const newValue = rawValue / 100;
+    const newInput = formatNumber(newValue);
     setCurrentInput(newInput);
     if (showingResult) {
       setDisplay(newInput);
@@ -188,8 +308,10 @@ const Calculator: React.FC<CalculatorProps> = ({
     } else if (expression === '') {
       setDisplay(newInput);
     } else {
-      setDisplay(expression + newInput);
+      const formattedExpression = formatExpression(expression.trim());
+      setDisplay(formattedExpression + ' ' + newInput);
     }
+    setIsFormattedResult(true);
   }, [expression, currentInput, showingResult]);
 
   const handleBackspace = useCallback(() => {
@@ -198,36 +320,46 @@ const Calculator: React.FC<CalculatorProps> = ({
       setShowingResult(false);
       setResultFormula('');
       setExpression('');
-      const newInput = currentInput.length > 1 ? currentInput.slice(0, -1) : '0';
+      // Remove formatting and get raw value
+      const rawValue = currentInput.replace(/,/g, '');
+      const newInput = rawValue.length > 1 ? rawValue.slice(0, -1) : '0';
       setCurrentInput(newInput);
-      setDisplay(newInput);
+      setDisplay(formatDisplayNumber(newInput));
       if (newInput === '0') setWaitingForOperand(true);
+      setIsFormattedResult(false);
     } else if (showingOperator) {
       // Remove the last operator from expression
       const newExpression = expression.slice(0, -3); // Remove " + " or similar
       setExpression(newExpression);
+      const formattedInput = formatDisplayNumber(currentInput);
       if (newExpression === '') {
-        setDisplay(currentInput);
+        setDisplay(formattedInput);
       } else {
-        setDisplay(newExpression + currentInput);
+        const formattedExpression = formatExpression(newExpression.trim());
+        setDisplay(formattedExpression + ' ' + formattedInput);
       }
       setShowingOperator(false);
       setWaitingForOperand(false);
       setOperator(null);
     } else if (currentInput.length > 1 && currentInput !== '0') {
-      const newInput = currentInput.slice(0, -1);
-      setCurrentInput(newInput);
+      // Remove formatting, remove character, then reformat
+      const rawValue = currentInput.replace(/,/g, '');
+      const newRawInput = rawValue.slice(0, -1);
+      setCurrentInput(newRawInput);
+      const formattedInput = formatDisplayNumber(newRawInput);
       if (expression === '') {
-        setDisplay(newInput);
+        setDisplay(formattedInput);
       } else {
-        setDisplay(expression + newInput);
+        const formattedExpression = formatExpression(expression.trim());
+        setDisplay(formattedExpression + ' ' + formattedInput);
       }
     } else {
       setCurrentInput('0');
       if (expression === '') {
         setDisplay('0');
       } else {
-        setDisplay(expression + '0');
+        const formattedExpression = formatExpression(expression.trim());
+        setDisplay(formattedExpression + ' 0');
       }
       setWaitingForOperand(true);
     }
@@ -265,14 +397,14 @@ const Calculator: React.FC<CalculatorProps> = ({
   }, [id, onSetActive]);
 
   const renderButton = (label: string, onClick: () => void, className: string = '') => (
-    <button onClick={onClick} className={`rounded-lg h-16 text-2xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 ${className}`}>
+    <button onClick={onClick} className={`rounded-lg h-12 sm:h-14 md:h-16 text-lg sm:text-xl md:text-2xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 ${className}`}>
       {label}
     </button>
   );
 
   return (
     <div 
-      className={`bg-gray-800 rounded-2xl shadow-2xl p-4 flex flex-col gap-4 relative min-w-[280px] cursor-pointer transition-all duration-200 ${
+      className={`bg-gray-800 rounded-2xl shadow-2xl p-3 sm:p-4 flex flex-col gap-3 sm:gap-4 relative min-w-[260px] sm:min-w-[280px] cursor-pointer transition-all duration-200 ${
         isActive 
           ? 'ring-2 ring-cyan-400 ring-opacity-75 shadow-cyan-400/20' 
           : 'hover:ring-1 hover:ring-gray-600'
@@ -288,13 +420,19 @@ const Calculator: React.FC<CalculatorProps> = ({
        >
             <CloseIcon />
        </button>
-      <div className="bg-gray-900 text-white text-right p-4 rounded-lg font-mono overflow-x-auto min-h-[100px] flex flex-col justify-end">
+      <div 
+        ref={displayRef}
+        className="bg-gray-900 text-white text-right p-3 sm:p-4 rounded-lg font-mono min-h-[80px] sm:min-h-[90px] md:min-h-[100px] flex flex-col justify-end"
+      >
         {showingResult && resultFormula && (
-          <div className="text-lg text-gray-400 mb-2 whitespace-nowrap">
+          <div className="calculator-display-text text-xs sm:text-sm md:text-base text-gray-400 mb-2">
             {resultFormula}
           </div>
         )}
-        <div className={`whitespace-nowrap ${showingResult ? 'text-2xl md:text-3xl lg:text-4xl' : 'text-lg md:text-xl lg:text-4xl'}`}>
+        <div 
+          ref={textRef}
+          className={`calculator-display-text ${showingResult ? 'text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold' : 'text-sm sm:text-base md:text-lg lg:text-xl'}`}
+        >
           {display || '0'}
         </div>
       </div>

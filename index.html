@@ -151,6 +151,47 @@
         right: 0;
         bottom: 0;
       }
+      
+      /* Custom scrollbar for calculator display */
+      .calculator-display {
+        scrollbar-width: thin;
+        scrollbar-color: #4b5563 #1f2937;
+        scroll-behavior: smooth;
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+      
+      /* Make the display text scrollable */
+      .calculator-display-text {
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: thin;
+        scrollbar-color: #4b5563 #1f2937;
+        white-space: nowrap;
+        min-width: 100%;
+      }
+      
+      .calculator-display::-webkit-scrollbar,
+      .calculator-display-text::-webkit-scrollbar {
+        height: 4px;
+      }
+      
+      .calculator-display::-webkit-scrollbar-track,
+      .calculator-display-text::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 3px;
+      }
+      
+      .calculator-display::-webkit-scrollbar-thumb,
+      .calculator-display-text::-webkit-scrollbar-thumb {
+        background: #4b5563;
+        border-radius: 3px;
+      }
+      
+      .calculator-display::-webkit-scrollbar-thumb:hover,
+      .calculator-display-text::-webkit-scrollbar-thumb:hover {
+        background: #6b7280;
+      }
     </style>
   <link rel="stylesheet" href="/index.css">
 </head>
