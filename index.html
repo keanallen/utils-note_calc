@@ -154,8 +154,7 @@
       
       /* Custom scrollbar for calculator display */
       .calculator-display {
-        scrollbar-width: thin;
-        scrollbar-color: #4b5563 #1f2937;
+        scrollbar-width: none; /* Firefox - hide scrollbar */
         scroll-behavior: smooth;
         overflow-x: auto;
         overflow-y: hidden;
@@ -165,32 +164,15 @@
       .calculator-display-text {
         overflow-x: auto;
         overflow-y: hidden;
-        scrollbar-width: thin;
-        scrollbar-color: #4b5563 #1f2937;
+        scrollbar-width: none; /* Firefox - hide scrollbar */
         white-space: nowrap;
         min-width: 100%;
       }
       
+      /* Webkit browsers - hide scrollbar */
       .calculator-display::-webkit-scrollbar,
       .calculator-display-text::-webkit-scrollbar {
-        height: 4px;
-      }
-      
-      .calculator-display::-webkit-scrollbar-track,
-      .calculator-display-text::-webkit-scrollbar-track {
-        background: transparent;
-        border-radius: 3px;
-      }
-      
-      .calculator-display::-webkit-scrollbar-thumb,
-      .calculator-display-text::-webkit-scrollbar-thumb {
-        background: #4b5563;
-        border-radius: 3px;
-      }
-      
-      .calculator-display::-webkit-scrollbar-thumb:hover,
-      .calculator-display-text::-webkit-scrollbar-thumb:hover {
-        background: #6b7280;
+        display: none; /* Safari and Chrome */
       }
     </style>
   <link rel="stylesheet" href="/index.css">
