@@ -25,8 +25,20 @@
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
     <!-- Export Libraries -->
-    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
-    <script src="https://unpkg.com/html-to-docx@1.8.0/dist/html-to-docx.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.min.js"></script>
+    
+    <!-- Verify libraries are loaded -->
+    <script>
+      window.addEventListener('load', () => {
+        console.log('Checking external libraries:');
+        console.log('jsPDF available:', typeof jsPDF !== 'undefined');
+        console.log('docx available:', typeof docx !== 'undefined');
+        console.log('window.jspdf:', !!(window.jspdf));
+        console.log('window.jsPDF:', !!(window.jsPDF));
+        console.log('window.docx:', !!(window.docx));
+      });
+    </script>
     
   <script type="importmap">
 {
