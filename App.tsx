@@ -116,13 +116,13 @@ const App: React.FC = () => {
           {calculators.length > 0 && (
             <div className="mb-4 p-3 bg-gray-800/30 rounded-lg border border-gray-700">
               <p className="text-sm text-gray-400 mb-2">
-                🎯 <strong>Keyboard Shortcuts:</strong> Click on a calculator to select it, then use:
+                <strong>Keyboard Shortcuts:</strong> Click on a calculator to select it, then use:
               </p>
               <div className="text-xs text-gray-500 grid grid-cols-2 md:grid-cols-4 gap-2">
                 <span>• Numbers: 0-9</span>
                 <span>• Operators: + - * /</span>
                 <span>• Enter: Calculate</span>
-                <span>• Escape: Clear</span>
+                <span>• Esc: Clear, ⌫: Backspace</span>
               </div>
             </div>
           )}

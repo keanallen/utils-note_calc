@@ -24,6 +24,11 @@ const Calculator: React.FC<CalculatorProps> = ({
   const [operator, setOperator] = useState<string | null>(null);
   const [previousValue, setPreviousValue] = useState<number | null>(null);
   const [waitingForOperand, setWaitingForOperand] = useState(true);
+  const [showingOperator, setShowingOperator] = useState(false);
+  const [expression, setExpression] = useState('');
+  const [currentInput, setCurrentInput] = useState('0');
+  const [showingResult, setShowingResult] = useState(false);
+  const [resultFormula, setResultFormula] = useState('');
 
   const calculate = (val1: number, val2: number, op: string): number => {
     switch (op) {
@@ -36,44 +41,113 @@ const Calculator: React.FC<CalculatorProps> = ({
   };
 
   const handleDigit = useCallback((digit: string) => {
-    if (waitingForOperand) {
+    if (showingResult) {
+      // Start fresh after showing result
+      setCurrentInput(digit);
       setDisplay(digit);
+      setExpression('');
+      setShowingResult(false);
+      setResultFormula('');
       setWaitingForOperand(false);
+      setShowingOperator(false);
+    } else if (waitingForOperand || showingOperator) {
+      setCurrentInput(digit);
+      if (expression === '') {
+        // Starting fresh
+        setDisplay(digit);
+      } else {
+        // After operator
+        setDisplay(expression + digit);
+      }
+      setWaitingForOperand(false);
+      setShowingOperator(false);
     } else {
-      setDisplay(display === '0' ? digit : display + digit);
+      const newInput = currentInput === '0' ? digit : currentInput + digit;
+      setCurrentInput(newInput);
+      if (expression === '') {
+        setDisplay(newInput);
+      } else {
+        setDisplay(expression + newInput);
+      }
     }
-  }, [display, waitingForOperand]);
+  }, [expression, currentInput, waitingForOperand, showingOperator, showingResult]);
 
   const handleDecimal = useCallback(() => {
-    if (!display.includes('.')) {
-      setDisplay(display + '.');
+    if (showingResult) {
+      // Start fresh with decimal after showing result
+      setCurrentInput('0.');
+      setDisplay('0.');
+      setExpression('');
+      setShowingResult(false);
+      setResultFormula('');
       setWaitingForOperand(false);
+      setShowingOperator(false);
+    } else if (showingOperator || waitingForOperand) {
+      setCurrentInput('0.');
+      if (expression === '') {
+        setDisplay('0.');
+      } else {
+        setDisplay(expression + '0.');
+      }
+      setWaitingForOperand(false);
+      setShowingOperator(false);
+    } else if (!currentInput.includes('.')) {
+      const newInput = currentInput + '.';
+      setCurrentInput(newInput);
+      if (expression === '') {
+        setDisplay(newInput);
+      } else {
+        setDisplay(expression + newInput);
+      }
     }
-  }, [display]);
+  }, [expression, currentInput, showingOperator, waitingForOperand, showingResult]);
 
   const handleOperator = useCallback((nextOperator: string) => {
-    const inputValue = parseFloat(display);
-    if (operator && previousValue !== null && !waitingForOperand) {
-      const result = calculate(previousValue, inputValue, operator);
-      setDisplay(String(result));
-      setPreviousValue(result);
+    if (showingResult) {
+      // Continue from result
+      setExpression(currentInput + ' ' + nextOperator + ' ');
+      setDisplay(currentInput + ' ' + nextOperator + ' ');
+      setPreviousValue(parseFloat(currentInput));
+      setShowingResult(false);
+      setResultFormula('');
     } else {
-      setPreviousValue(inputValue);
+      const inputValue = parseFloat(currentInput);
+      
+      if (operator && previousValue !== null && !waitingForOperand) {
+        const result = calculate(previousValue, inputValue, operator);
+        setExpression(expression + currentInput + ' ' + nextOperator + ' ');
+        setDisplay(expression + currentInput + ' ' + nextOperator + ' ');
+        setPreviousValue(result);
+        setCurrentInput(String(result));
+      } else {
+        const newExpression = expression + currentInput + ' ' + nextOperator + ' ';
+        setExpression(newExpression);
+        setDisplay(newExpression);
+        setPreviousValue(inputValue);
+      }
     }
+    
     setWaitingForOperand(true);
     setOperator(nextOperator);
-  }, [display, operator, previousValue, waitingForOperand]);
+    setShowingOperator(true);
+  }, [expression, currentInput, operator, previousValue, waitingForOperand, showingResult]);
   
   const handleEquals = useCallback(() => {
-    const inputValue = parseFloat(display);
+    const inputValue = parseFloat(currentInput);
     if (operator && previousValue !== null) {
       const result = calculate(previousValue, inputValue, operator);
+      const formula = expression + currentInput;
+      setResultFormula(formula);
       setDisplay(String(result));
+      setShowingResult(true);
+      setExpression('');
+      setCurrentInput(String(result));
       setPreviousValue(null);
       setOperator(null);
       setWaitingForOperand(true);
+      setShowingOperator(false);
     }
-  }, [display, operator, previousValue]);
+  }, [expression, currentInput, operator, previousValue]);
 
   const handleClear = useCallback(() => {
     setDisplay('0');
@@ -81,24 +155,83 @@ const Calculator: React.FC<CalculatorProps> = ({
     setOperator(null);
     setPreviousValue(null);
     setWaitingForOperand(true);
+    setShowingOperator(false);
+    setExpression('');
+    setCurrentInput('0');
+    setShowingResult(false);
+    setResultFormula('');
   }, []);
 
   const handlePlusMinus = useCallback(() => {
-    setDisplay(String(parseFloat(display) * -1));
-  }, [display]);
+    const newInput = String(parseFloat(currentInput) * -1);
+    setCurrentInput(newInput);
+    if (showingResult) {
+      setDisplay(newInput);
+      setShowingResult(false);
+      setResultFormula('');
+      setExpression('');
+    } else if (expression === '') {
+      setDisplay(newInput);
+    } else {
+      setDisplay(expression + newInput);
+    }
+  }, [expression, currentInput, showingResult]);
 
   const handlePercent = useCallback(() => {
-    setDisplay(String(parseFloat(display) / 100));
-  }, [display]);
+    const newInput = String(parseFloat(currentInput) / 100);
+    setCurrentInput(newInput);
+    if (showingResult) {
+      setDisplay(newInput);
+      setShowingResult(false);
+      setResultFormula('');
+      setExpression('');
+    } else if (expression === '') {
+      setDisplay(newInput);
+    } else {
+      setDisplay(expression + newInput);
+    }
+  }, [expression, currentInput, showingResult]);
 
   const handleBackspace = useCallback(() => {
-    if (display.length > 1) {
-      setDisplay(display.slice(0, -1));
+    if (showingResult) {
+      // Clear result state and go back to normal input
+      setShowingResult(false);
+      setResultFormula('');
+      setExpression('');
+      const newInput = currentInput.length > 1 ? currentInput.slice(0, -1) : '0';
+      setCurrentInput(newInput);
+      setDisplay(newInput);
+      if (newInput === '0') setWaitingForOperand(true);
+    } else if (showingOperator) {
+      // Remove the last operator from expression
+      const newExpression = expression.slice(0, -3); // Remove " + " or similar
+      setExpression(newExpression);
+      if (newExpression === '') {
+        setDisplay(currentInput);
+      } else {
+        setDisplay(newExpression + currentInput);
+      }
+      setShowingOperator(false);
+      setWaitingForOperand(false);
+      setOperator(null);
+    } else if (currentInput.length > 1 && currentInput !== '0') {
+      const newInput = currentInput.slice(0, -1);
+      setCurrentInput(newInput);
+      if (expression === '') {
+        setDisplay(newInput);
+      } else {
+        setDisplay(expression + newInput);
+      }
     } else {
-      setDisplay('0');
+      setCurrentInput('0');
+      if (expression === '') {
+        setDisplay('0');
+      } else {
+        setDisplay(expression + '0');
+      }
       setWaitingForOperand(true);
     }
-  }, [display]);
+  }, [expression, currentInput, showingOperator, showingResult]);
 
   const handleKeyboardInput = useCallback((key: string) => {
     if (key >= '0' && key <= '9') {
@@ -155,8 +288,15 @@ const Calculator: React.FC<CalculatorProps> = ({
        >
             <CloseIcon />
        </button>
-      <div className="bg-gray-900 text-white text-5xl text-right p-4 rounded-lg font-mono overflow-x-auto">
-        {display}
+      <div className="bg-gray-900 text-white text-right p-4 rounded-lg font-mono overflow-x-auto min-h-[100px] flex flex-col justify-end">
+        {showingResult && resultFormula && (
+          <div className="text-lg text-gray-400 mb-2 whitespace-nowrap">
+            {resultFormula}
+          </div>
+        )}
+        <div className={`whitespace-nowrap ${showingResult ? 'text-2xl md:text-3xl lg:text-4xl' : 'text-lg md:text-xl lg:text-4xl'}`}>
+          {display || '0'}
+        </div>
       </div>
       <div className="grid grid-cols-4 gap-2">
         {renderButton(display !== '0' ? 'C' : 'AC', handleClear, 'bg-gray-600 text-red-400 hover:bg-gray-500')}
