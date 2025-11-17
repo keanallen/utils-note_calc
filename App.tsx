@@ -1,11 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Calculator from './components/Calculator';
 import Notes from './components/Notes';
 import { AddIcon } from './components/icons';
 
+export interface CalculatorRef {
+  handleKeyboardInput: (key: string) => void;
+}
+
 const App: React.FC = () => {
-  const [calculators, setCalculators] = useState<{ id: number }[]>([{ id: Date.now() }]);
+  const initialId = Date.now();
+  const [calculators, setCalculators] = useState<{ id: number }[]>([{ id: initialId }]);
   const [notes, setNotes] = useState<string>('');
+  const [activeCalculatorId, setActiveCalculatorId] = useState<number | null>(initialId);
+  const calculatorRefs = useRef<Map<number, CalculatorRef>>(new Map());
 
   useEffect(() => {
     try {
@@ -26,18 +33,75 @@ const App: React.FC = () => {
     }
   }, [notes]);
 
+  // Handle keyboard events
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Only handle keyboard input if there's an active calculator and not typing in notes
+      if (!activeCalculatorId || event.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      const activeCalculatorRef = calculatorRefs.current.get(activeCalculatorId);
+      if (!activeCalculatorRef) return;
+
+      // Prevent default behavior for calculator keys
+      const calculatorKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '-', '*', '/', '=', '.', 'Enter', 'Escape', 'Backspace'];
+      if (calculatorKeys.includes(event.key)) {
+        event.preventDefault();
+      }
+
+      // Map keyboard keys to calculator inputs
+      let key = event.key;
+      if (key === 'Enter') key = '=';
+      else if (key === 'Escape') key = 'Clear';
+      else if (key === 'Backspace') key = 'Backspace';
+      else if (key === '*') key = '×';
+      else if (key === '/') key = '÷';
+
+      activeCalculatorRef.handleKeyboardInput(key);
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [activeCalculatorId]);
+
+  const setCalculatorActive = useCallback((id: number) => {
+    setActiveCalculatorId(id);
+  }, []);
+
+  const registerCalculatorRef = useCallback((id: number, ref: CalculatorRef) => {
+    calculatorRefs.current.set(id, ref);
+  }, []);
+
+  const unregisterCalculatorRef = useCallback((id: number) => {
+    calculatorRefs.current.delete(id);
+  }, []);
+
   const addCalculator = useCallback(() => {
-    setCalculators(prev => [...prev, { id: Date.now() }]);
+    const newId = Date.now();
+    setCalculators(prev => [...prev, { id: newId }]);
+    setActiveCalculatorId(newId); // Automatically set new calculator as active
   }, []);
 
   const removeCalculator = useCallback((id: number) => {
     setCalculators(prev => prev.filter(calc => calc.id !== id));
-  }, []);
+    // If removing active calculator, clear active state
+    if (activeCalculatorId === id) {
+      setActiveCalculatorId(null);
+    }
+  }, [activeCalculatorId]);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white font-sans flex flex-col">
       <header className="p-4 bg-gray-800/50 backdrop-blur-sm border-b border-gray-700 flex justify-between items-center sticky top-0 z-10">
-        <h1 className="text-xl font-bold text-cyan-400">All-In-One Calculator and Note-Taking App</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-bold text-cyan-400">All-In-One Calculator and Note-Taking App</h1>
+          {activeCalculatorId && (
+            <span className="text-sm text-gray-400 bg-gray-700 px-2 py-1 rounded-lg">
+              ⌨️ Active Calculator: #{calculators.findIndex(calc => calc.id === activeCalculatorId) + 1}
+            </span>
+          )}
+        </div>
         <button
           onClick={addCalculator}
           className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg flex items-center transition-transform transform hover:scale-105"
@@ -49,13 +113,37 @@ const App: React.FC = () => {
 
       <main className="flex-grow flex flex-col md:flex-row p-2 sm:p-4 gap-4">
         <div className="flex-grow md:w-3/5 lg:w-2/3">
+          {calculators.length > 0 && (
+            <div className="mb-4 p-3 bg-gray-800/30 rounded-lg border border-gray-700">
+              <p className="text-sm text-gray-400 mb-2">
+                🎯 <strong>Keyboard Shortcuts:</strong> Click on a calculator to select it, then use:
+              </p>
+              <div className="text-xs text-gray-500 grid grid-cols-2 md:grid-cols-4 gap-2">
+                <span>• Numbers: 0-9</span>
+                <span>• Operators: + - * /</span>
+                <span>• Enter: Calculate</span>
+                <span>• Escape: Clear</span>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 h-full content-start">
             {calculators.map(calc => (
-              <Calculator key={calc.id} id={calc.id} onClose={removeCalculator} />
+              <Calculator 
+                key={calc.id} 
+                id={calc.id} 
+                isActive={activeCalculatorId === calc.id}
+                onClose={removeCalculator} 
+                onSetActive={setCalculatorActive}
+                onRegisterRef={registerCalculatorRef}
+                onUnregisterRef={unregisterCalculatorRef}
+              />
             ))}
              {calculators.length === 0 && (
-              <div className="lg:col-span-2 xl:col-span-3 flex items-center justify-center h-full text-gray-500">
-                <p>Click "Add Calculator" to get started.</p>
+              <div className="lg:col-span-2 xl:col-span-3 flex items-center justify-center h-full text-gray-500 text-center">
+                <div>
+                  <p className="text-lg mb-2">Click "Add Calculator" to get started.</p>
+                  <p className="text-sm">Tip: Click on a calculator to make it active, then use your keyboard for input!</p>
+                </div>
               </div>
             )}
           </div>
