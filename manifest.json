@@ -1,0 +1,20 @@
+{
+  "short_name": "Note Calc",
+  "name": "Note Calc: PWA Multi-Calculator & Notes",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192.png/1a202c/FFFFFF?text=NC",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512.png/1a202c/FFFFFF?text=Note+Calc",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#1a202c",
+  "background_color": "#1a202c"
+}

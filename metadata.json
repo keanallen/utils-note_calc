@@ -1,0 +1,5 @@
+{
+  "name": "Note Calc - PWA Multi-Calculator & Notes",
+  "description": "Note Calc is a powerful Progressive Web App (PWA) that combines a feature-rich calculator with a versatile notes editor. Open multiple calculators simultaneously for complex tasks, jot down ideas in the rich text editor, and enjoy seamless offline access. Perfect for students, professionals, and anyone needing to calculate and take notes on the fly.",
+  "requestFramePermissions": []
+}
