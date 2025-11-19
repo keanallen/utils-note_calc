@@ -101,13 +101,117 @@ const Notes: React.FC<NotesProps> = ({ value, onChange, onFocus, onBlur }) => {
     }
   }, [value, onChange, onFocus, onBlur]);
 
-  const handleCopy = useCallback(() => {
+  const handleCopy = useCallback(async () => {
     if (quillInstance.current) {
-      const textToCopy = quillInstance.current.getText();
-      navigator.clipboard.writeText(textToCopy).then(() => {
+      try {
+        // Get both HTML content and plain text
+        const htmlContent = quillInstance.current.root.innerHTML;
+        const plainText = quillInstance.current.getText();
+        
+        // Convert HTML to Markdown-like format for better chat app compatibility
+        const formatForChatApps = (html: string): string => {
+          // Create a temporary element to parse HTML
+          const tempElement = document.createElement('div');
+          tempElement.innerHTML = html;
+          
+          // Convert HTML elements to chat-friendly formatting
+          const processNode = (node: Node): string => {
+            if (node.nodeType === Node.TEXT_NODE) {
+              return node.textContent || '';
+            }
+            
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const element = node as Element;
+              const tagName = element.tagName.toLowerCase();
+              const children = Array.from(element.childNodes).map(processNode).join('');
+              
+              switch (tagName) {
+                case 'strong':
+                case 'b':
+                  return `*${children}*`; // Bold for most chat apps
+                case 'em':
+                case 'i':
+                  return `_${children}_`; // Italic for most chat apps
+                case 'u':
+                  return `__${children}__`; // Underline (Discord style)
+                case 's':
+                case 'strike':
+                  return `~${children}~`; // Strikethrough for Discord/Slack
+                case 'h1':
+                  return `\n# ${children}\n`; // H1 heading
+                case 'h2':
+                  return `\n## ${children}\n`; // H2 heading
+                case 'h3':
+                  return `\n### ${children}\n`; // H3 heading
+                case 'p':
+                  return children + '\n'; // Paragraph with line break
+                case 'br':
+                  return '\n'; // Line break
+                case 'blockquote':
+                  return `\n> ${children}\n`; // Quote format
+                case 'ul':
+                case 'ol':
+                  return '\n' + children; // List container
+                case 'li':
+                  return `• ${children}\n`; // List item with bullet
+                case 'a':
+                  const href = element.getAttribute('href');
+                  return href ? `[${children}](${href})` : children; // Link format
+                case 'code':
+                  return `\`${children}\``; // Inline code
+                case 'pre':
+                  return `\`\`\`\n${children}\n\`\`\``; // Code block
+                default:
+                  return children;
+              }
+            }
+            
+            return '';
+          };
+          
+          const formatted = Array.from(tempElement.childNodes).map(processNode).join('');
+          
+          // Clean up extra line breaks and spaces
+          return formatted
+            .replace(/\n{3,}/g, '\n\n') // Max 2 consecutive line breaks
+            .replace(/^\n+/, '') // Remove leading line breaks
+            .replace(/\n+$/, '') // Remove trailing line breaks
+            .trim();
+        };
+        
+        // Format the content for chat apps
+        const formattedText = formatForChatApps(htmlContent);
+        
+        // Use the modern Clipboard API with both formats
+        if (navigator.clipboard && window.ClipboardItem) {
+          // Try to copy both HTML and plain text versions
+          const clipboardItems = new ClipboardItem({
+            'text/html': new Blob([htmlContent], { type: 'text/html' }),
+            'text/plain': new Blob([formattedText || plainText], { type: 'text/plain' })
+          });
+          
+          await navigator.clipboard.write([clipboardItems]);
+        } else {
+          // Fallback to plain text only
+          await navigator.clipboard.writeText(formattedText || plainText);
+        }
+        
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
-      });
+        
+      } catch (error) {
+        console.error('Copy failed:', error);
+        // Fallback to simple text copy
+        try {
+          const plainText = quillInstance.current.getText();
+          await navigator.clipboard.writeText(plainText);
+          setIsCopied(true);
+          setTimeout(() => setIsCopied(false), 2000);
+        } catch (fallbackError) {
+          console.error('Fallback copy also failed:', fallbackError);
+          alert('Copy failed. Please select and copy the text manually.');
+        }
+      }
     }
   }, []);
 
