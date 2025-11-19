@@ -161,29 +161,86 @@ const Notes: React.FC<NotesProps> = ({ value, onChange, onFocus, onBlur }) => {
         } else {
           console.error('docx library not found, falling back to RTF');
           
-          // Create RTF format as fallback
+          // Create RTF format with formatting as fallback
+          const htmlContent = quillInstance.current.root.innerHTML;
           const text = quillInstance.current.getText();
-          const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}\\f0\\fs24 ${text.replace(/\n/g, '\\par ')}}`;
+          
+          // Simple HTML to RTF conversion
+          let rtfContent = text
+            .replace(/\n/g, '\\par ')
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"');
+          
+          rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}\\f0\\fs24 ${rtfContent}}`;
           downloadFile('notes.rtf', rtfContent, 'application/rtf');
           alert('DOCX export not available. Downloaded as RTF instead. You can open this in Word to convert to DOCX.');
           return;
         }
         
-        // Get the text content from Quill
-        const text = quillInstance.current.getText();
-        const lines = text.split('\n').filter(line => line.trim() !== '');
+        // Get the formatted content from Quill
+        const delta = quillInstance.current.getContents();
+        const { Document, Packer, Paragraph, TextRun, HeadingLevel } = docxLib;
+        
+        // Convert Delta format to DOCX paragraphs
+        const paragraphs: any[] = [];
+        let currentRuns: any[] = [];
+        
+        delta.ops?.forEach((op: any) => {
+          if (typeof op.insert === 'string') {
+            const text = op.insert;
+            const lines = text.split('\n');
+            
+            lines.forEach((line, index) => {
+              if (line.length > 0 || index === 0) {
+                // Create text run with formatting
+                const runOptions: any = { text: line };
+                
+                if (op.attributes) {
+                  if (op.attributes.bold) runOptions.bold = true;
+                  if (op.attributes.italic) runOptions.italics = true;
+                  if (op.attributes.underline) runOptions.underline = {};
+                  if (op.attributes.strike) runOptions.strike = true;
+                }
+                
+                currentRuns.push(new TextRun(runOptions));
+              }
+              
+              // If we hit a newline or it's the last line, create a paragraph
+              if (index > 0 || (index === lines.length - 1 && text.endsWith('\n'))) {
+                const paragraphOptions: any = { children: currentRuns.length > 0 ? currentRuns : [new TextRun('')] };
+                
+                // Check for heading formatting
+                if (op.attributes?.header) {
+                  const headerLevel = parseInt(op.attributes.header);
+                  if (headerLevel === 1) paragraphOptions.heading = HeadingLevel.HEADING_1;
+                  else if (headerLevel === 2) paragraphOptions.heading = HeadingLevel.HEADING_2;
+                  else if (headerLevel === 3) paragraphOptions.heading = HeadingLevel.HEADING_3;
+                }
+                
+                paragraphs.push(new Paragraph(paragraphOptions));
+                currentRuns = [];
+              }
+            });
+          }
+        });
+        
+        // If there are remaining runs, add them as a paragraph
+        if (currentRuns.length > 0) {
+          paragraphs.push(new Paragraph({ children: currentRuns }));
+        }
+        
+        // Ensure we have at least one paragraph
+        if (paragraphs.length === 0) {
+          paragraphs.push(new Paragraph({ children: [new TextRun('')] }));
+        }
         
         // Create a new document using the docx library
-        const { Document, Packer, Paragraph, TextRun } = docxLib;
-        
         const doc = new Document({
           sections: [{
             properties: {},
-            children: lines.map(line => 
-              new Paragraph({
-                children: [new TextRun(line)]
-              })
-            )
+            children: paragraphs
           }]
         });
         
@@ -193,7 +250,7 @@ const Notes: React.FC<NotesProps> = ({ value, onChange, onFocus, onBlur }) => {
         
       } catch (error) {
         console.error('Error creating document:', error);
-        // Fallback to HTML download
+        // Fallback to HTML download with better formatting
         console.log('Falling back to HTML download');
         const htmlContent = quillInstance.current.root.innerHTML;
         const fullHtml = `
@@ -203,8 +260,27 @@ const Notes: React.FC<NotesProps> = ({ value, onChange, onFocus, onBlur }) => {
               <meta charset="UTF-8">
               <title>Notes</title>
               <style>
-                body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; }
+                body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; color: #333; }
                 p { margin: 0 0 1em 0; }
+                h1, h2, h3 { margin: 1.5em 0 0.5em 0; color: #2c3e50; }
+                h1 { font-size: 2em; border-bottom: 2px solid #3498db; padding-bottom: 0.3em; }
+                h2 { font-size: 1.5em; border-bottom: 1px solid #bdc3c7; padding-bottom: 0.2em; }
+                h3 { font-size: 1.2em; }
+                strong { font-weight: bold; }
+                em { font-style: italic; }
+                u { text-decoration: underline; }
+                s { text-decoration: line-through; }
+                blockquote { 
+                  margin: 1em 0; 
+                  padding-left: 1.5em; 
+                  border-left: 4px solid #3498db; 
+                  color: #666; 
+                  font-style: italic; 
+                }
+                ul, ol { margin: 1em 0; padding-left: 2em; }
+                li { margin: 0.5em 0; }
+                a { color: #3498db; text-decoration: none; }
+                a:hover { text-decoration: underline; }
               </style>
             </head>
             <body>
@@ -213,7 +289,7 @@ const Notes: React.FC<NotesProps> = ({ value, onChange, onFocus, onBlur }) => {
           </html>
         `;
         downloadFile('notes.html', fullHtml, 'text/html');
-        alert('DOCX export failed. Downloaded as HTML instead. You can open this in Word to convert to DOCX.');
+        alert('DOCX export failed. Downloaded as styled HTML instead. You can open this in Word to convert to DOCX.');
       } finally {
         setTimeout(() => setIsDownloading(false), 1000);
       }
@@ -247,25 +323,106 @@ const Notes: React.FC<NotesProps> = ({ value, onChange, onFocus, onBlur }) => {
         }
         
         const doc = new jsPDFConstructor();
-        const text = quillInstance.current.getText();
         
-        // Better text handling for PDF
+        // Get formatted content from Quill instead of just plain text
+        const htmlContent = quillInstance.current.root.innerHTML;
+        
+        // Create a temporary element to parse HTML and extract formatted text
+        const tempElement = document.createElement('div');
+        tempElement.innerHTML = htmlContent;
+        
+        // Better text handling for PDF with basic formatting support
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
         const margin = 20;
         const maxLineWidth = pageWidth - (margin * 2);
-        
-        const lines = doc.splitTextToSize(text, maxLineWidth);
         let y = margin;
+        const lineHeight = 7;
         
-        lines.forEach((line: string) => {
-          if (y > pageHeight - margin) {
-            doc.addPage();
-            y = margin;
+        // Process each element in the HTML
+        const processElement = (element: Element, isBold = false, isItalic = false) => {
+          if (element.nodeType === Node.TEXT_NODE) {
+            const text = element.textContent || '';
+            if (text.trim()) {
+              const lines = doc.splitTextToSize(text, maxLineWidth);
+              lines.forEach((line: string) => {
+                if (y > pageHeight - margin) {
+                  doc.addPage();
+                  y = margin;
+                }
+                
+                // Set font style based on formatting
+                if (isBold && isItalic) {
+                  doc.setFont("helvetica", "bolditalic");
+                } else if (isBold) {
+                  doc.setFont("helvetica", "bold");
+                } else if (isItalic) {
+                  doc.setFont("helvetica", "italic");
+                } else {
+                  doc.setFont("helvetica", "normal");
+                }
+                
+                doc.text(line, margin, y);
+                y += lineHeight;
+              });
+            }
+          } else {
+            const tagName = element.tagName?.toLowerCase();
+            const newIsBold = isBold || tagName === 'strong' || tagName === 'b';
+            const newIsItalic = isItalic || tagName === 'em' || tagName === 'i';
+            
+            // Handle headings with larger font size
+            if (tagName?.startsWith('h')) {
+              if (y > pageHeight - margin - 10) {
+                doc.addPage();
+                y = margin;
+              }
+              y += 5; // Extra space before heading
+              doc.setFontSize(tagName === 'h1' ? 18 : tagName === 'h2' ? 16 : 14);
+              doc.setFont("helvetica", "bold");
+              
+              const text = element.textContent || '';
+              const lines = doc.splitTextToSize(text, maxLineWidth);
+              lines.forEach((line: string) => {
+                doc.text(line, margin, y);
+                y += lineHeight + 2;
+              });
+              
+              doc.setFontSize(12); // Reset to normal size
+              y += 3; // Extra space after heading
+            } else if (tagName === 'p' || tagName === 'div') {
+              // Process paragraph children
+              Array.from(element.childNodes).forEach(child => {
+                processElement(child as Element, newIsBold, newIsItalic);
+              });
+              y += lineHeight; // Extra space after paragraph
+            } else {
+              // Process other elements recursively
+              Array.from(element.childNodes).forEach(child => {
+                processElement(child as Element, newIsBold, newIsItalic);
+              });
+            }
           }
-          doc.text(line, margin, y);
-          y += 7; // Line spacing
-        });
+        };
+        
+        // If no formatted content, fall back to plain text
+        if (!htmlContent.trim() || htmlContent === '<p><br></p>') {
+          const text = quillInstance.current.getText();
+          const lines = doc.splitTextToSize(text, maxLineWidth);
+          lines.forEach((line: string) => {
+            if (y > pageHeight - margin) {
+              doc.addPage();
+              y = margin;
+            }
+            doc.text(line, margin, y);
+            y += lineHeight;
+          });
+        } else {
+          // Process the formatted content
+          Array.from(tempElement.childNodes).forEach(child => {
+            processElement(child as Element);
+          });
+        }
         
         doc.save('notes.pdf');
         setIsDropdownOpen(false);
