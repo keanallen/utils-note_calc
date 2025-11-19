@@ -23,10 +23,10 @@ const Navigation: React.FC<NavProps> = ({ currentPage, onNavigate }) => {
 
   return (
     <nav className="bg-gray-800 border-b border-gray-700 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <button 
               onClick={(e) => handleNavClick('home', e)}
               className="flex items-center space-x-2 text-white font-bold text-xl hover:text-cyan-400 transition-colors"
@@ -46,7 +46,7 @@ const Navigation: React.FC<NavProps> = ({ currentPage, onNavigate }) => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-4">
+            <div className="flex items-baseline space-x-4">
               {navItems.map((item) => (
                 <a
                   key={item.id}
