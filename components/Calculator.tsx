@@ -844,7 +844,7 @@ const Calculator: React.FC<CalculatorProps> = ({
 
   return (
     <div 
-      className={`bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-5 md:p-6 m-2 sm:m-3 md:m-4 flex flex-col gap-4 sm:gap-5 relative min-w-[300px] sm:min-w-[400px] cursor-pointer transition-all duration-200 ${
+      className={`bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-5 md:p-6 flex flex-col gap-4 sm:gap-5 relative w-full max-w-full cursor-pointer transition-all duration-200 ${
         isActive 
           ? 'ring-2 ring-cyan-400 ring-opacity-75 shadow-cyan-400/20' 
           : 'hover:ring-1 hover:ring-gray-600'

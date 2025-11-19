@@ -131,8 +131,8 @@ const App: React.FC = () => {
         </button>
       </header>
 
-      <main className="flex-grow flex flex-col md:flex-row p-4 sm:p-6 gap-6">
-        <div className="flex-grow md:w-3/5 lg:w-2/3">
+      <main className="flex-grow flex flex-col lg:flex-row p-4 sm:p-6 gap-6">
+        <div className="flex-grow lg:w-3/5 xl:w-2/3">
           {calculators.length > 0 && (
             <div className="mb-4 p-3 bg-gray-800/30 rounded-lg border border-gray-700">
               <p className="text-sm text-gray-400 mb-2">
@@ -146,7 +146,7 @@ const App: React.FC = () => {
               </div>
             </div>
           )}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 h-full content-start">
+          <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4 auto-rows-min">
             {calculators.map(calc => (
               <Calculator 
                 key={calc.id} 
@@ -159,7 +159,7 @@ const App: React.FC = () => {
               />
             ))}
              {calculators.length === 0 && (
-              <div className="lg:col-span-2 xl:col-span-3 flex items-center justify-center h-full text-gray-500 text-center">
+              <div className="md:col-span-2 2xl:col-span-3 flex items-center justify-center h-64 text-gray-500 text-center">
                 <div>
                   <p className="text-lg mb-2">Click "Add Calculator" to get started.</p>
                   <p className="text-sm">Tip: Click on a calculator to make it active, then use your keyboard for input!</p>
@@ -168,7 +168,7 @@ const App: React.FC = () => {
             )}
           </div>
         </div>
-        <div className="flex-shrink-0 md:w-2/5 lg:w-1/3 h-64 md:h-auto">
+        <div className="flex-shrink-0 lg:w-2/5 xl:w-1/3 h-64 lg:h-auto min-h-[400px]">
           <Notes 
             value={notes} 
             onChange={setNotes}
