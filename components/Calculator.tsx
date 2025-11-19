@@ -668,6 +668,18 @@ const Calculator: React.FC<CalculatorProps> = ({
     </button>
   );
 
+  const renderScientificButton = (label: string, onClick: () => void, className: string = '') => {
+    // Check if the button is a number (0-9)
+    const isNumber = /^[0-9]$/.test(label);
+    const fontSize = isNumber ? 'text-lg sm:text-xl md:text-2xl' : 'text-xs sm:text-sm md:text-base';
+    
+    return (
+      <button onClick={onClick} className={`rounded-lg h-12 sm:h-14 md:h-16 ${fontSize} font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 ${className}`}>
+        {label}
+      </button>
+    );
+  };
+
   const renderBasicButtons = () => (
     <div className="grid grid-cols-4 gap-3">
       {renderButton(display !== '0' ? 'C' : 'AC', handleClear, 'bg-gray-600 text-red-400 hover:bg-gray-500')}
@@ -699,75 +711,75 @@ const Calculator: React.FC<CalculatorProps> = ({
   const renderScientificButtons = () => (
     <div className="grid grid-cols-6 gap-2 text-xs sm:text-sm">
       {/* Row 1 - Angle mode and memory */}
-      {renderButton(angleMode.toUpperCase(), () => setAngleMode(angleMode === 'deg' ? 'rad' : 'deg'), 'bg-orange-600 hover:bg-orange-500')}
-      {renderButton('MC', () => handleMemoryFunction('MC'), 'bg-blue-600 hover:bg-blue-500')}
-      {renderButton('MR', () => handleMemoryFunction('MR'), `bg-blue-600 hover:bg-blue-500 ${memoryVisible ? 'ring-2 ring-yellow-400' : ''}`)}
-      {renderButton('MS', () => handleMemoryFunction('MS'), 'bg-blue-600 hover:bg-blue-500')}
-      {renderButton('M+', () => handleMemoryFunction('M+'), 'bg-blue-600 hover:bg-blue-500')}
-      {renderButton('M-', () => handleMemoryFunction('M-'), 'bg-blue-600 hover:bg-blue-500')}
+      {renderScientificButton(angleMode.toUpperCase(), () => setAngleMode(angleMode === 'deg' ? 'rad' : 'deg'), 'bg-orange-600 hover:bg-orange-500')}
+      {renderScientificButton('MC', () => handleMemoryFunction('MC'), 'bg-blue-600 hover:bg-blue-500')}
+      {renderScientificButton('MR', () => handleMemoryFunction('MR'), `bg-blue-600 hover:bg-blue-500 ${memoryVisible ? 'ring-2 ring-yellow-400' : ''}`)}
+      {renderScientificButton('MS', () => handleMemoryFunction('MS'), 'bg-blue-600 hover:bg-blue-500')}
+      {renderScientificButton('M+', () => handleMemoryFunction('M+'), 'bg-blue-600 hover:bg-blue-500')}
+      {renderScientificButton('M-', () => handleMemoryFunction('M-'), 'bg-blue-600 hover:bg-blue-500')}
 
       {/* Row 2 - Trig functions */}
-      {renderButton('sin', () => handleScientificFunction('sin'), 'bg-purple-600 hover:bg-purple-500')}
-      {renderButton('cos', () => handleScientificFunction('cos'), 'bg-purple-600 hover:bg-purple-500')}
-      {renderButton('tan', () => handleScientificFunction('tan'), 'bg-purple-600 hover:bg-purple-500')}
-      {renderButton('asin', () => handleScientificFunction('asin'), 'bg-purple-600 hover:bg-purple-500')}
-      {renderButton('acos', () => handleScientificFunction('acos'), 'bg-purple-600 hover:bg-purple-500')}
-      {renderButton('atan', () => handleScientificFunction('atan'), 'bg-purple-600 hover:bg-purple-500')}
+      {renderScientificButton('sin', () => handleScientificFunction('sin'), 'bg-purple-600 hover:bg-purple-500')}
+      {renderScientificButton('cos', () => handleScientificFunction('cos'), 'bg-purple-600 hover:bg-purple-500')}
+      {renderScientificButton('tan', () => handleScientificFunction('tan'), 'bg-purple-600 hover:bg-purple-500')}
+      {renderScientificButton('asin', () => handleScientificFunction('asin'), 'bg-purple-600 hover:bg-purple-500')}
+      {renderScientificButton('acos', () => handleScientificFunction('acos'), 'bg-purple-600 hover:bg-purple-500')}
+      {renderScientificButton('atan', () => handleScientificFunction('atan'), 'bg-purple-600 hover:bg-purple-500')}
       
       {/* Row 3 - Log and power functions */}
-      {renderButton('log', () => handleScientificFunction('log'), 'bg-purple-600 hover:bg-purple-500')}
-      {renderButton('ln', () => handleScientificFunction('ln'), 'bg-purple-600 hover:bg-purple-500')}
-      {renderButton('√', () => handleScientificFunction('sqrt'), 'bg-purple-600 hover:bg-purple-500')}
-      {renderButton('x²', () => handleScientificFunction('x²'), 'bg-purple-600 hover:bg-purple-500')}
-      {renderButton('x³', () => handleScientificFunction('x³'), 'bg-purple-600 hover:bg-purple-500')}
-      {renderButton('x^y', () => handleOperator('^'), 'bg-purple-600 hover:bg-purple-500')}
+      {renderScientificButton('log', () => handleScientificFunction('log'), 'bg-purple-600 hover:bg-purple-500')}
+      {renderScientificButton('ln', () => handleScientificFunction('ln'), 'bg-purple-600 hover:bg-purple-500')}
+      {renderScientificButton('√', () => handleScientificFunction('sqrt'), 'bg-purple-600 hover:bg-purple-500')}
+      {renderScientificButton('x²', () => handleScientificFunction('x²'), 'bg-purple-600 hover:bg-purple-500')}
+      {renderScientificButton('x³', () => handleScientificFunction('x³'), 'bg-purple-600 hover:bg-purple-500')}
+      {renderScientificButton('x^y', () => handleOperator('^'), 'bg-purple-600 hover:bg-purple-500')}
       
       {/* Row 4 - Fraction and special functions */}
-      {renderButton('1/x', () => handleFractionFunction('1/x'), 'bg-green-600 hover:bg-green-500')}
-      {renderButton('a/b', () => handleFractionFunction('a/b'), 'bg-green-600 hover:bg-green-500')}
-      {renderButton('x!', () => handleScientificFunction('x!'), 'bg-purple-600 hover:bg-purple-500')}
-      {renderButton('π', () => handleScientificFunction('π'), 'bg-purple-600 hover:bg-purple-500')}
-      {renderButton('e', () => handleScientificFunction('e'), 'bg-purple-600 hover:bg-purple-500')}
-      {renderButton('e^x', () => handleScientificFunction('e^x'), 'bg-purple-600 hover:bg-purple-500')}
+      {renderScientificButton('1/x', () => handleFractionFunction('1/x'), 'bg-green-600 hover:bg-green-500')}
+      {renderScientificButton('a/b', () => handleFractionFunction('a/b'), 'bg-green-600 hover:bg-green-500')}
+      {renderScientificButton('x!', () => handleScientificFunction('x!'), 'bg-purple-600 hover:bg-purple-500')}
+      {renderScientificButton('π', () => handleScientificFunction('π'), 'bg-purple-600 hover:bg-purple-500')}
+      {renderScientificButton('e', () => handleScientificFunction('e'), 'bg-purple-600 hover:bg-purple-500')}
+      {renderScientificButton('e^x', () => handleScientificFunction('e^x'), 'bg-purple-600 hover:bg-purple-500')}
       
       {/* Row 5 - Clear and operators */}
-      {renderButton('C', handleClear, 'bg-gray-600 text-red-400 hover:bg-gray-500')}
-      {renderButton('+/-', handlePlusMinus, 'bg-gray-600 hover:bg-gray-500')}
-      {renderButton('%', handlePercent, 'bg-gray-600 hover:bg-gray-500')}
-      {renderButton('mod', () => handleOperator('mod'), 'bg-orange-600 hover:bg-orange-500')}
-      {renderButton('10^x', () => handleScientificFunction('10^x'), 'bg-purple-600 hover:bg-purple-500')}
-      {renderButton('÷', () => handleOperator('/'), 'bg-cyan-600 hover:bg-cyan-500')}
+      {renderScientificButton('C', handleClear, 'bg-gray-600 text-red-400 hover:bg-gray-500')}
+      {renderScientificButton('+/-', handlePlusMinus, 'bg-gray-600 hover:bg-gray-500')}
+      {renderScientificButton('%', handlePercent, 'bg-gray-600 hover:bg-gray-500')}
+      {renderScientificButton('mod', () => handleOperator('mod'), 'bg-orange-600 hover:bg-orange-500')}
+      {renderScientificButton('10^x', () => handleScientificFunction('10^x'), 'bg-purple-600 hover:bg-purple-500')}
+      {renderScientificButton('÷', () => handleOperator('/'), 'bg-cyan-600 hover:bg-cyan-500')}
 
       {/* Row 6 */}
-      {renderButton('7', () => handleDigit('7'), 'bg-gray-700 hover:bg-gray-600')}
-      {renderButton('8', () => handleDigit('8'), 'bg-gray-700 hover:bg-gray-600')}
-      {renderButton('9', () => handleDigit('9'), 'bg-gray-700 hover:bg-gray-600')}
-      {renderButton('(', () => {}, 'bg-orange-600 hover:bg-orange-500')}
-      {renderButton(')', () => {}, 'bg-orange-600 hover:bg-orange-500')}
-      {renderButton('×', () => handleOperator('*'), 'bg-cyan-600 hover:bg-cyan-500')}
+      {renderScientificButton('7', () => handleDigit('7'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderScientificButton('8', () => handleDigit('8'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderScientificButton('9', () => handleDigit('9'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderScientificButton('(', () => {}, 'bg-orange-600 hover:bg-orange-500')}
+      {renderScientificButton(')', () => {}, 'bg-orange-600 hover:bg-orange-500')}
+      {renderScientificButton('×', () => handleOperator('*'), 'bg-cyan-600 hover:bg-cyan-500')}
 
       {/* Row 7 */}
-      {renderButton('4', () => handleDigit('4'), 'bg-gray-700 hover:bg-gray-600')}
-      {renderButton('5', () => handleDigit('5'), 'bg-gray-700 hover:bg-gray-600')}
-      {renderButton('6', () => handleDigit('6'), 'bg-gray-700 hover:bg-gray-600')}
-      {renderButton('n!', () => handleScientificFunction('x!'), 'bg-purple-600 hover:bg-purple-500')}
-      {renderButton('Rnd', () => handleScientificFunction('Rnd'), 'bg-purple-600 hover:bg-purple-500')}
-      {renderButton('-', () => handleOperator('-'), 'bg-cyan-600 hover:bg-cyan-500')}
+      {renderScientificButton('4', () => handleDigit('4'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderScientificButton('5', () => handleDigit('5'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderScientificButton('6', () => handleDigit('6'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderScientificButton('n!', () => handleScientificFunction('x!'), 'bg-purple-600 hover:bg-purple-500')}
+      {renderScientificButton('Rnd', () => handleScientificFunction('Rnd'), 'bg-purple-600 hover:bg-purple-500')}
+      {renderScientificButton('-', () => handleOperator('-'), 'bg-cyan-600 hover:bg-cyan-500')}
 
       {/* Row 8 */}
-      {renderButton('1', () => handleDigit('1'), 'bg-gray-700 hover:bg-gray-600')}
-      {renderButton('2', () => handleDigit('2'), 'bg-gray-700 hover:bg-gray-600')}
-      {renderButton('3', () => handleDigit('3'), 'bg-gray-700 hover:bg-gray-600')}
-      {renderButton('EXP', () => {}, 'bg-orange-600 hover:bg-orange-500')}
-      {renderButton('Ans', () => {}, 'bg-orange-600 hover:bg-orange-500')}
-      {renderButton('+', () => handleOperator('+'), 'bg-cyan-600 hover:bg-cyan-500')}
+      {renderScientificButton('1', () => handleDigit('1'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderScientificButton('2', () => handleDigit('2'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderScientificButton('3', () => handleDigit('3'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderScientificButton('EXP', () => {}, 'bg-orange-600 hover:bg-orange-500')}
+      {renderScientificButton('Ans', () => {}, 'bg-orange-600 hover:bg-orange-500')}
+      {renderScientificButton('+', () => handleOperator('+'), 'bg-cyan-600 hover:bg-cyan-500')}
 
       {/* Row 9 */}
-      {renderButton('0', () => handleDigit('0'), 'col-span-2 bg-gray-700 hover:bg-gray-600')}
-      {renderButton('.', handleDecimal, 'bg-gray-700 hover:bg-gray-600')}
-      {renderButton('±', handlePlusMinus, 'bg-gray-600 hover:bg-gray-500')}
-      {renderButton('%', handlePercent, 'bg-gray-600 hover:bg-gray-500')}
-      {renderButton('=', handleEquals, 'bg-cyan-600 hover:bg-cyan-500')}
+      {renderScientificButton('0', () => handleDigit('0'), 'col-span-2 bg-gray-700 hover:bg-gray-600')}
+      {renderScientificButton('.', handleDecimal, 'bg-gray-700 hover:bg-gray-600')}
+      {renderScientificButton('±', handlePlusMinus, 'bg-gray-600 hover:bg-gray-500')}
+      {renderScientificButton('%', handlePercent, 'bg-gray-600 hover:bg-gray-500')}
+      {renderScientificButton('=', handleEquals, 'bg-cyan-600 hover:bg-cyan-500')}
     </div>
   );
 
