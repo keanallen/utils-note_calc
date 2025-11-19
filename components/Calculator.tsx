@@ -94,8 +94,10 @@ const Calculator: React.FC<CalculatorProps> = ({
   const [angleMode, setAngleMode] = useState<'deg' | 'rad'>('deg');
   const [memoryValue, setMemoryValue] = useState<number>(0);
   const [memoryVisible, setMemoryVisible] = useState<boolean>(false);
+  const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const displayRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll display to the right when content changes
   useEffect(() => {
@@ -116,6 +118,20 @@ const Calculator: React.FC<CalculatorProps> = ({
 
     return () => clearTimeout(timeoutId);
   }, [display]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    if (dropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [dropdownOpen]);
 
   const calculate = (val1: number, val2: number, op: string): number => {
     switch (op) {
@@ -631,6 +647,21 @@ const Calculator: React.FC<CalculatorProps> = ({
     onSetActive(id);
   }, [id, onSetActive]);
 
+  const getCalculatorTypeLabel = (type: CalculatorType): string => {
+    switch (type) {
+      case 'basic': return 'Basic';
+      case 'scientific': return 'Scientific';
+      case 'programmer': return 'Programmer';
+      default: return 'Basic';
+    }
+  };
+
+  const handleCalculatorTypeChange = (newType: CalculatorType) => {
+    setCalculatorType(newType);
+    setDropdownOpen(false);
+    handleClear(); // Reset calculator when switching types
+  };
+
   const renderButton = (label: string, onClick: () => void, className: string = '') => (
     <button onClick={onClick} className={`rounded-lg h-12 sm:h-14 md:h-16 text-lg sm:text-xl md:text-2xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 ${className}`}>
       {label}
@@ -831,20 +862,61 @@ const Calculator: React.FC<CalculatorProps> = ({
        </button>
       
       {/* Calculator Type Selector */}
-      <div className="flex justify-center mb-4">
-        <select 
-          value={calculatorType} 
-          onChange={(e) => {
+      <div ref={dropdownRef} className="flex justify-start items-center mb-4 gap-2 relative">
+        <button 
+          onClick={(e) => {
             e.stopPropagation();
-            setCalculatorType(e.target.value as CalculatorType);
-            handleClear(); // Reset calculator when switching types
+            setDropdownOpen(!dropdownOpen);
           }}
-          className="bg-gray-700 text-white text-sm px-3 py-1 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+          className="flex items-center gap-2 focus:outline-none"
         >
-          <option value="basic">Basic</option>
-          <option value="scientific">Scientific</option>
-          <option value="programmer">Programmer</option>
-        </select>
+          <img 
+            src="/assets/calculator.png" 
+            alt="Calculator" 
+            className="w-5 h-5 sm:w-6 sm:h-6"
+          />
+          <span className="text-white text-sm font-medium">
+            {getCalculatorTypeLabel(calculatorType)}
+          </span>
+        </button>
+        
+        {dropdownOpen && (
+          <div className="absolute top-8 left-0 bg-gray-700 border border-gray-600 rounded-lg shadow-lg z-10 min-w-[120px]">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCalculatorTypeChange('basic');
+              }}
+              className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-600 first:rounded-t-lg ${
+                calculatorType === 'basic' ? 'bg-gray-600 text-cyan-400' : 'text-white'
+              }`}
+            >
+              Basic
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCalculatorTypeChange('scientific');
+              }}
+              className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-600 ${
+                calculatorType === 'scientific' ? 'bg-gray-600 text-cyan-400' : 'text-white'
+              }`}
+            >
+              Scientific
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCalculatorTypeChange('programmer');
+              }}
+              className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-600 last:rounded-b-lg ${
+                calculatorType === 'programmer' ? 'bg-gray-600 text-cyan-400' : 'text-white'
+              }`}
+            >
+              Programmer
+            </button>
+          </div>
+        )}
       </div>
 
       <div 
