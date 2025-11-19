@@ -1,11 +1,15 @@
 
-const CACHE_NAME = 'pwa-calculator-notes-v1';
+const CACHE_NAME = 'pwa-calculator-notes-v1.2';
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/assets/icon-192.png',
-  '/assets/icon-512.png'
+  '/assets/icon-192.webp',
+  '/assets/icon-512.webp',
+  '/assets/icon-192.png', // Fallback
+  '/assets/icon-512.png', // Fallback
+  '/assets/banner-1200x630.png',
+  '/assets/calculator.png'
 ];
 
 self.addEventListener('install', event => {
