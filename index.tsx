@@ -1,6 +1,8 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+// @ts-ignore: allow importing CSS files for side effects in this project
+import './index.css';
 import App from './App';
 
 const rootElement = document.getElementById('root');
