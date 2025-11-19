@@ -94,6 +94,7 @@ const Calculator: React.FC<CalculatorProps> = ({
   const [angleMode, setAngleMode] = useState<'deg' | 'rad'>('deg');
   const [memoryValue, setMemoryValue] = useState<number>(0);
   const [memoryVisible, setMemoryVisible] = useState<boolean>(false);
+  const [lastAnswer, setLastAnswer] = useState<number>(0);
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const displayRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
@@ -151,66 +152,153 @@ const Calculator: React.FC<CalculatorProps> = ({
   const handleScientificFunction = useCallback((func: string) => {
     const currentVal = parseFloat(currentInput.replace(/,/g, ''));
     let result: number;
+    let hasError = false;
     
-    switch (func) {
-      case 'sin': 
-        result = angleMode === 'deg' ? Math.sin(currentVal * Math.PI / 180) : Math.sin(currentVal);
-        break;
-      case 'cos': 
-        result = angleMode === 'deg' ? Math.cos(currentVal * Math.PI / 180) : Math.cos(currentVal);
-        break;
-      case 'tan': 
-        result = angleMode === 'deg' ? Math.tan(currentVal * Math.PI / 180) : Math.tan(currentVal);
-        break;
-      case 'asin': 
-        result = angleMode === 'deg' ? Math.asin(currentVal) * 180 / Math.PI : Math.asin(currentVal);
-        break;
-      case 'acos': 
-        result = angleMode === 'deg' ? Math.acos(currentVal) * 180 / Math.PI : Math.acos(currentVal);
-        break;
-      case 'atan': 
-        result = angleMode === 'deg' ? Math.atan(currentVal) * 180 / Math.PI : Math.atan(currentVal);
-        break;
-      case 'log': result = Math.log10(currentVal); break;
-      case 'ln': result = Math.log(currentVal); break;
-      case 'sqrt': result = Math.sqrt(currentVal); break;
-      case 'x²': result = currentVal * currentVal; break;
-      case 'x³': result = currentVal * currentVal * currentVal; break;
-      case '1/x': result = 1 / currentVal; break;
-      case 'e^x': result = Math.exp(currentVal); break;
-      case '10^x': result = Math.pow(10, currentVal); break;
-      case 'π': result = Math.PI; break;
-      case 'e': result = Math.E; break;
-      case 'x!': 
-        // Factorial function
-        if (currentVal < 0 || !Number.isInteger(currentVal)) {
-          result = NaN;
-        } else if (currentVal === 0 || currentVal === 1) {
-          result = 1;
-        } else {
-          result = 1;
-          for (let i = 2; i <= currentVal; i++) {
-            result *= i;
-          }
-        }
-        break;
-      case 'Rnd':
-        result = Math.random();
-        break;
-      default: return;
+    // Validate input for domain-restricted functions
+    if (func === 'asin' || func === 'acos') {
+      if (currentVal < -1 || currentVal > 1) {
+        hasError = true;
+      }
+    } else if (func === 'log' || func === 'ln') {
+      if (currentVal <= 0) {
+        hasError = true;
+      }
+    } else if (func === 'sqrt') {
+      if (currentVal < 0) {
+        hasError = true;
+      }
+    } else if (func === 'x!' && (currentVal < 0 || !Number.isInteger(currentVal) || currentVal > 170)) {
+      // Factorial is undefined for negative numbers, non-integers, and large numbers (170! ≈ Infinity)
+      hasError = true;
     }
     
-    const formattedResult = formatNumber(result);
+    if (!hasError) {
+      switch (func) {
+        case 'sin': 
+          result = angleMode === 'deg' ? Math.sin(currentVal * Math.PI / 180) : Math.sin(currentVal);
+          break;
+        case 'cos': 
+          result = angleMode === 'deg' ? Math.cos(currentVal * Math.PI / 180) : Math.cos(currentVal);
+          break;
+        case 'tan': 
+          result = angleMode === 'deg' ? Math.tan(currentVal * Math.PI / 180) : Math.tan(currentVal);
+          break;
+        case 'asin': 
+          result = angleMode === 'deg' ? Math.asin(currentVal) * 180 / Math.PI : Math.asin(currentVal);
+          break;
+        case 'acos': 
+          result = angleMode === 'deg' ? Math.acos(currentVal) * 180 / Math.PI : Math.acos(currentVal);
+          break;
+        case 'atan': 
+          result = angleMode === 'deg' ? Math.atan(currentVal) * 180 / Math.PI : Math.atan(currentVal);
+          break;
+        case 'log': result = Math.log10(currentVal); break;
+        case 'ln': result = Math.log(currentVal); break;
+        case 'sqrt': result = Math.sqrt(currentVal); break;
+        case 'x²': result = currentVal * currentVal; break;
+        case 'x³': result = currentVal * currentVal * currentVal; break;
+        case '1/x': 
+          result = currentVal === 0 ? Infinity : 1 / currentVal;
+          break;
+        case 'e^x': result = Math.exp(currentVal); break;
+        case '10^x': result = Math.pow(10, currentVal); break;
+        case 'π': result = Math.PI; break;
+        case 'e': result = Math.E; break;
+        case 'x!': 
+          // Factorial function with proper validation
+          if (currentVal === 0 || currentVal === 1) {
+            result = 1;
+          } else {
+            result = 1;
+            for (let i = 2; i <= currentVal; i++) {
+              result *= i;
+            }
+          }
+          break;
+        case 'Rnd':
+          result = Math.random();
+          break;
+        default: return;
+      }
+    }
+    
+    // Handle error cases
+    if (hasError || isNaN(result!)) {
+      setDisplay('Error');
+      setCurrentInput('0');
+      setShowingResult(true);
+      setExpression('');
+      setResultFormula('Math Error');
+      setPreviousValue(null);
+      setOperator(null);
+      setWaitingForOperand(true);
+      setIsFormattedResult(false);
+      return;
+    }
+    
+    // Handle infinity cases
+    if (!isFinite(result!)) {
+      setDisplay('∞');
+      setCurrentInput(String(result));
+      setShowingResult(true);
+      setExpression('');
+      setResultFormula(`${func}(${formatNumber(currentVal)})`);
+      setPreviousValue(null);
+      setOperator(null);
+      setWaitingForOperand(true);
+      setIsFormattedResult(false);
+      return;
+    }
+    
+    const formattedResult = formatNumber(result!);
     setCurrentInput(String(result));
     setDisplay(formattedResult);
     setShowingResult(true);
     setExpression('');
     setResultFormula(`${func}(${formatNumber(currentVal)})`);
+    setLastAnswer(result!); // Store for Ans button
     setPreviousValue(null);
     setOperator(null);
     setWaitingForOperand(true);
     setIsFormattedResult(true);
   }, [currentInput, angleMode]);
+
+  const handleSpecialFunction = useCallback((func: string) => {
+    switch (func) {
+      case 'Ans':
+        // Insert last answer
+        const formattedAnswer = formatNumber(lastAnswer);
+        setCurrentInput(String(lastAnswer));
+        if (showingResult) {
+          setDisplay(formattedAnswer);
+          setShowingResult(false);
+          setResultFormula('');
+          setExpression('');
+        } else if (expression === '') {
+          setDisplay(formattedAnswer);
+        } else {
+          const formattedExpression = formatExpression(expression.trim());
+          setDisplay(formattedExpression + ' ' + formattedAnswer);
+        }
+        setWaitingForOperand(false);
+        setIsFormattedResult(true);
+        break;
+      
+      case 'EXP':
+        // Scientific notation (multiply by 10^x)
+        if (!waitingForOperand) {
+          const newInput = currentInput + 'E';
+          setCurrentInput(newInput);
+          if (expression === '') {
+            setDisplay(newInput);
+          } else {
+            const formattedExpression = formatExpression(expression.trim());
+            setDisplay(formattedExpression + ' ' + newInput);
+          }
+        }
+        break;
+    }
+  }, [lastAnswer, currentInput, showingResult, expression, waitingForOperand]);
 
   const handleMemoryFunction = useCallback((func: string) => {
     const currentVal = parseFloat(currentInput.replace(/,/g, ''));
@@ -505,6 +593,7 @@ const Calculator: React.FC<CalculatorProps> = ({
       setShowingResult(true);
       setExpression('');
       setCurrentInput(String(result)); // Store raw result for further calculations
+      setLastAnswer(result); // Store for Ans button
       setPreviousValue(null);
       setOperator(null);
       setWaitingForOperand(true);
@@ -754,8 +843,8 @@ const Calculator: React.FC<CalculatorProps> = ({
       {renderScientificButton('7', () => handleDigit('7'), 'bg-gray-700 hover:bg-gray-600')}
       {renderScientificButton('8', () => handleDigit('8'), 'bg-gray-700 hover:bg-gray-600')}
       {renderScientificButton('9', () => handleDigit('9'), 'bg-gray-700 hover:bg-gray-600')}
-      {renderScientificButton('(', () => {}, 'bg-orange-600 hover:bg-orange-500')}
-      {renderScientificButton(')', () => {}, 'bg-orange-600 hover:bg-orange-500')}
+      {renderScientificButton('(', () => {/* Parentheses functionality can be added later */}, 'bg-orange-600 hover:bg-orange-500')}
+      {renderScientificButton(')', () => {/* Parentheses functionality can be added later */}, 'bg-orange-600 hover:bg-orange-500')}
       {renderScientificButton('×', () => handleOperator('*'), 'bg-cyan-600 hover:bg-cyan-500')}
 
       {/* Row 7 */}
@@ -770,8 +859,8 @@ const Calculator: React.FC<CalculatorProps> = ({
       {renderScientificButton('1', () => handleDigit('1'), 'bg-gray-700 hover:bg-gray-600')}
       {renderScientificButton('2', () => handleDigit('2'), 'bg-gray-700 hover:bg-gray-600')}
       {renderScientificButton('3', () => handleDigit('3'), 'bg-gray-700 hover:bg-gray-600')}
-      {renderScientificButton('EXP', () => {}, 'bg-orange-600 hover:bg-orange-500')}
-      {renderScientificButton('Ans', () => {}, 'bg-orange-600 hover:bg-orange-500')}
+      {renderScientificButton('EXP', () => handleSpecialFunction('EXP'), 'bg-orange-600 hover:bg-orange-500')}
+      {renderScientificButton('Ans', () => handleSpecialFunction('Ans'), 'bg-orange-600 hover:bg-orange-500')}
       {renderScientificButton('+', () => handleOperator('+'), 'bg-cyan-600 hover:bg-cyan-500')}
 
       {/* Row 9 */}
