@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback, useImperativeHandle, forwardRef, useEffect, useRef } from 'react';
-import { CloseIcon, HistoryIcon } from './icons';
+import { CloseIcon } from './icons';
 
 type CalculatorType = 'basic' | 'scientific' | 'programmer';
 
@@ -1064,7 +1064,11 @@ const Calculator: React.FC<CalculatorProps> = ({
             className="p-1.5 text-gray-400 hover:text-white transition-colors rounded-md hover:bg-gray-700"
             title={`History (${history.length} entries)`}
           >
-            <HistoryIcon />
+            <img 
+              src="/assets/history.png" 
+              alt="History" 
+              className="w-5 h-5"
+            />
           </button>
           
           {historyOpen && (
