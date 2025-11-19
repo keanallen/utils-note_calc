@@ -125,6 +125,9 @@ const Calculator: React.FC<CalculatorProps> = ({
       case '/': return val2 === 0 ? Infinity : val1 / val2;
       case '^': return Math.pow(val1, val2);
       case 'mod': return val1 % val2;
+      case 'AND': return val1 & val2;
+      case 'OR': return val1 | val2;
+      case 'XOR': return val1 ^ val2;
       default: return val2;
     }
   };
@@ -270,27 +273,69 @@ const Calculator: React.FC<CalculatorProps> = ({
   }, [currentInput]);
 
   const handleProgrammerFunction = useCallback((func: string) => {
-    const currentVal = parseInt(currentInput.replace(/,/g, ''), 10);
+    // For hex inputs, parse as base 16, otherwise base 10
+    const hasHexDigits = /[A-F]/i.test(currentInput);
+    const currentVal = hasHexDigits ? 
+      parseInt(currentInput.replace(/,/g, ''), 16) : 
+      parseInt(currentInput.replace(/,/g, ''), 10);
     let result: number;
     
     switch (func) {
       case 'AND': 
-        result = currentVal & currentVal;
+        // For binary operations, if we have a previous value and operator, use them
+        if (previousValue !== null && operator === 'AND') {
+          result = previousValue & currentVal;
+          setResultFormula(`${previousValue} AND ${currentVal}`);
+        } else {
+          // Otherwise, set up for binary operation
+          setPreviousValue(currentVal);
+          setOperator('AND');
+          setWaitingForOperand(true);
+          setShowingOperator(true);
+          setDisplay(formatNumber(currentVal) + ' AND ');
+          return;
+        }
         break;
       case 'OR': 
-        result = currentVal | currentVal;
+        if (previousValue !== null && operator === 'OR') {
+          result = previousValue | currentVal;
+          setResultFormula(`${previousValue} OR ${currentVal}`);
+        } else {
+          setPreviousValue(currentVal);
+          setOperator('OR');
+          setWaitingForOperand(true);
+          setShowingOperator(true);
+          setDisplay(formatNumber(currentVal) + ' OR ');
+          return;
+        }
         break;
       case 'XOR': 
-        result = currentVal ^ 0;
+        if (previousValue !== null && operator === 'XOR') {
+          result = previousValue ^ currentVal;
+          setResultFormula(`${previousValue} XOR ${currentVal}`);
+        } else {
+          setPreviousValue(currentVal);
+          setOperator('XOR');
+          setWaitingForOperand(true);
+          setShowingOperator(true);
+          setDisplay(formatNumber(currentVal) + ' XOR ');
+          return;
+        }
         break;
       case 'NOT': 
+        // NOT is a unary operation
         result = ~currentVal;
+        setResultFormula(`NOT(${currentVal})`);
         break;
       case 'LSH': 
+        // Left shift by 1
         result = currentVal << 1;
+        setResultFormula(`${currentVal} << 1`);
         break;
       case 'RSH': 
+        // Right shift by 1
         result = currentVal >> 1;
+        setResultFormula(`${currentVal} >> 1`);
         break;
       default: return;
     }
@@ -300,14 +345,18 @@ const Calculator: React.FC<CalculatorProps> = ({
     setDisplay(formattedResult);
     setShowingResult(true);
     setExpression('');
-    setResultFormula(`${func}(${currentVal})`);
     setPreviousValue(null);
     setOperator(null);
     setWaitingForOperand(true);
     setIsFormattedResult(true);
-  }, [currentInput]);
+  }, [currentInput, previousValue, operator]);
 
   const handleDigit = useCallback((digit: string) => {
+    // For programmer calculator, only allow hex digits when appropriate
+    if (calculatorType === 'programmer' && ['A', 'B', 'C', 'D', 'E', 'F'].includes(digit.toUpperCase())) {
+      digit = digit.toUpperCase();
+    }
+    
     if (showingResult) {
       // Start fresh after showing result
       setCurrentInput(digit);
@@ -334,7 +383,7 @@ const Calculator: React.FC<CalculatorProps> = ({
     } else {
       const newInput = currentInput === '0' ? digit : currentInput + digit;
       setCurrentInput(newInput);
-      const formattedInput = formatDisplayNumber(newInput);
+      const formattedInput = calculatorType === 'programmer' ? newInput : formatDisplayNumber(newInput);
       if (expression === '') {
         setDisplay(formattedInput);
       } else {
@@ -344,7 +393,7 @@ const Calculator: React.FC<CalculatorProps> = ({
       }
       setIsFormattedResult(false);
     }
-  }, [expression, currentInput, waitingForOperand, showingOperator, showingResult]);
+  }, [expression, currentInput, waitingForOperand, showingOperator, showingResult, calculatorType]);
 
   const handleDecimal = useCallback(() => {
     if (showingResult) {
@@ -693,51 +742,72 @@ const Calculator: React.FC<CalculatorProps> = ({
 
   const renderProgrammerButtons = () => (
     <div className="grid grid-cols-4 gap-1 text-sm">
-      {/* Row 1 - Bit operations */}
+      {/* Row 1 - Number base buttons */}
+      {renderButton('DEC', () => {
+        const hasHexDigits = /[A-F]/i.test(currentInput);
+        const decValue = hasHexDigits ? parseInt(currentInput, 16) : parseInt(currentInput, 10);
+        setCurrentInput(String(decValue));
+        setDisplay(String(decValue));
+      }, 'bg-blue-600 hover:bg-blue-500')}
+      {renderButton('HEX', () => {
+        const hasHexDigits = /[A-F]/i.test(currentInput);
+        const decValue = hasHexDigits ? parseInt(currentInput, 16) : parseInt(currentInput, 10);
+        const hexValue = decValue.toString(16).toUpperCase();
+        setCurrentInput(hexValue);
+        setDisplay(hexValue);
+      }, 'bg-blue-600 hover:bg-blue-500')}
+      {renderButton('BIN', () => {
+        const hasHexDigits = /[A-F]/i.test(currentInput);
+        const decValue = hasHexDigits ? parseInt(currentInput, 16) : parseInt(currentInput, 10);
+        const binValue = decValue.toString(2);
+        setCurrentInput(binValue);
+        setDisplay(binValue);
+      }, 'bg-blue-600 hover:bg-blue-500')}
+      {renderButton('C', handleClear, 'bg-gray-600 text-red-400 hover:bg-gray-500')}
+
+      {/* Row 2 - Bit operations */}
       {renderButton('AND', () => handleProgrammerFunction('AND'), 'bg-green-600 hover:bg-green-500')}
       {renderButton('OR', () => handleProgrammerFunction('OR'), 'bg-green-600 hover:bg-green-500')}
       {renderButton('XOR', () => handleProgrammerFunction('XOR'), 'bg-green-600 hover:bg-green-500')}
       {renderButton('NOT', () => handleProgrammerFunction('NOT'), 'bg-green-600 hover:bg-green-500')}
       
-      {/* Row 2 - Shift operations */}
+      {/* Row 3 - Shift operations */}
       {renderButton('LSH', () => handleProgrammerFunction('LSH'), 'bg-green-600 hover:bg-green-500')}
       {renderButton('RSH', () => handleProgrammerFunction('RSH'), 'bg-green-600 hover:bg-green-500')}
       {renderButton('mod', () => handleOperator('mod'), 'bg-orange-600 hover:bg-orange-500')}
-      {renderButton('C', handleClear, 'bg-gray-600 text-red-400 hover:bg-gray-500')}
-
-      {/* Row 3 */}
-      {renderButton('D', () => handleDigit('D'), calculatorType === 'programmer' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-500 cursor-not-allowed')}
-      {renderButton('E', () => handleDigit('E'), calculatorType === 'programmer' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-500 cursor-not-allowed')}
-      {renderButton('F', () => handleDigit('F'), calculatorType === 'programmer' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-500 cursor-not-allowed')}
       {renderButton('÷', () => handleOperator('/'), 'bg-cyan-600 hover:bg-cyan-500')}
 
       {/* Row 4 */}
-      {renderButton('A', () => handleDigit('A'), calculatorType === 'programmer' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-500 cursor-not-allowed')}
-      {renderButton('B', () => handleDigit('B'), calculatorType === 'programmer' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-500 cursor-not-allowed')}
-      {renderButton('C', () => handleDigit('C'), calculatorType === 'programmer' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-500 cursor-not-allowed')}
+      {renderButton('D', () => handleDigit('D'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderButton('E', () => handleDigit('E'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderButton('F', () => handleDigit('F'), 'bg-gray-700 hover:bg-gray-600')}
       {renderButton('×', () => handleOperator('*'), 'bg-cyan-600 hover:bg-cyan-500')}
 
       {/* Row 5 */}
-      {renderButton('7', () => handleDigit('7'), 'bg-gray-700 hover:bg-gray-600')}
-      {renderButton('8', () => handleDigit('8'), 'bg-gray-700 hover:bg-gray-600')}
-      {renderButton('9', () => handleDigit('9'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderButton('A', () => handleDigit('A'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderButton('B', () => handleDigit('B'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderButton('C', () => handleDigit('C'), 'bg-gray-700 hover:bg-gray-600')}
       {renderButton('-', () => handleOperator('-'), 'bg-cyan-600 hover:bg-cyan-500')}
 
       {/* Row 6 */}
-      {renderButton('4', () => handleDigit('4'), 'bg-gray-700 hover:bg-gray-600')}
-      {renderButton('5', () => handleDigit('5'), 'bg-gray-700 hover:bg-gray-600')}
-      {renderButton('6', () => handleDigit('6'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderButton('7', () => handleDigit('7'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderButton('8', () => handleDigit('8'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderButton('9', () => handleDigit('9'), 'bg-gray-700 hover:bg-gray-600')}
       {renderButton('+', () => handleOperator('+'), 'bg-cyan-600 hover:bg-cyan-500')}
 
       {/* Row 7 */}
-      {renderButton('1', () => handleDigit('1'), 'bg-gray-700 hover:bg-gray-600')}
-      {renderButton('2', () => handleDigit('2'), 'bg-gray-700 hover:bg-gray-600')}
-      {renderButton('3', () => handleDigit('3'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderButton('4', () => handleDigit('4'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderButton('5', () => handleDigit('5'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderButton('6', () => handleDigit('6'), 'bg-gray-700 hover:bg-gray-600')}
       {renderButton('=', handleEquals, 'row-span-2 bg-cyan-600 hover:bg-cyan-500')}
 
       {/* Row 8 */}
-      {renderButton('0', () => handleDigit('0'), 'col-span-2 bg-gray-700 hover:bg-gray-600')}
-      {renderButton('.', handleDecimal, 'bg-gray-700 hover:bg-gray-600')}
+      {renderButton('1', () => handleDigit('1'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderButton('2', () => handleDigit('2'), 'bg-gray-700 hover:bg-gray-600')}
+      {renderButton('3', () => handleDigit('3'), 'bg-gray-700 hover:bg-gray-600')}
+
+      {/* Row 9 */}
+      {renderButton('0', () => handleDigit('0'), 'col-span-3 bg-gray-700 hover:bg-gray-600')}
     </div>
   );
 
@@ -795,6 +865,13 @@ const Calculator: React.FC<CalculatorProps> = ({
         {memoryVisible && (
           <div className="text-xs text-yellow-400 mt-1">
             M: {formatNumber(memoryValue)}
+          </div>
+        )}
+        {calculatorType === 'programmer' && (
+          <div className="text-xs text-blue-400 mt-1 space-y-1">
+            <div>DEC: {parseInt(currentInput.replace(/,/g, ''), /[A-F]/i.test(currentInput) ? 16 : 10)}</div>
+            <div>HEX: {parseInt(currentInput.replace(/,/g, ''), /[A-F]/i.test(currentInput) ? 16 : 10).toString(16).toUpperCase()}</div>
+            <div>BIN: {parseInt(currentInput.replace(/,/g, ''), /[A-F]/i.test(currentInput) ? 16 : 10).toString(2)}</div>
           </div>
         )}
       </div>
