@@ -131,7 +131,7 @@ const App: React.FC = () => {
         </button>
       </header>
 
-      <main className="flex-grow flex flex-col md:flex-row p-2 sm:p-4 gap-4">
+      <main className="flex-grow flex flex-col md:flex-row p-4 sm:p-6 gap-6">
         <div className="flex-grow md:w-3/5 lg:w-2/3">
           {calculators.length > 0 && (
             <div className="mb-4 p-3 bg-gray-800/30 rounded-lg border border-gray-700">
@@ -146,7 +146,7 @@ const App: React.FC = () => {
               </div>
             </div>
           )}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 h-full content-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 h-full content-start">
             {calculators.map(calc => (
               <Calculator 
                 key={calc.id} 

@@ -638,7 +638,7 @@ const Calculator: React.FC<CalculatorProps> = ({
   );
 
   const renderBasicButtons = () => (
-    <div className="grid grid-cols-4 gap-2">
+    <div className="grid grid-cols-4 gap-3">
       {renderButton(display !== '0' ? 'C' : 'AC', handleClear, 'bg-gray-600 text-red-400 hover:bg-gray-500')}
       {renderButton('+/-', handlePlusMinus, 'bg-gray-600 hover:bg-gray-500')}
       {renderButton('%', handlePercent, 'bg-gray-600 hover:bg-gray-500')}
@@ -666,7 +666,7 @@ const Calculator: React.FC<CalculatorProps> = ({
   );
 
   const renderScientificButtons = () => (
-    <div className="grid grid-cols-6 gap-1 text-xs sm:text-sm">
+    <div className="grid grid-cols-6 gap-2 text-xs sm:text-sm">
       {/* Row 1 - Angle mode and memory */}
       {renderButton(angleMode.toUpperCase(), () => setAngleMode(angleMode === 'deg' ? 'rad' : 'deg'), 'bg-orange-600 hover:bg-orange-500')}
       {renderButton('MC', () => handleMemoryFunction('MC'), 'bg-blue-600 hover:bg-blue-500')}
@@ -741,7 +741,7 @@ const Calculator: React.FC<CalculatorProps> = ({
   );
 
   const renderProgrammerButtons = () => (
-    <div className="grid grid-cols-4 gap-1 text-sm">
+    <div className="grid grid-cols-4 gap-2 text-sm">
       {/* Row 1 - Number base buttons */}
       {renderButton('DEC', () => {
         const hasHexDigits = /[A-F]/i.test(currentInput);
@@ -813,7 +813,7 @@ const Calculator: React.FC<CalculatorProps> = ({
 
   return (
     <div 
-      className={`bg-gray-800 rounded-2xl shadow-2xl p-3 sm:p-4 flex flex-col gap-3 sm:gap-4 relative min-w-[300px] sm:min-w-[400px] cursor-pointer transition-all duration-200 ${
+      className={`bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-5 md:p-6 m-2 sm:m-3 md:m-4 flex flex-col gap-4 sm:gap-5 relative min-w-[300px] sm:min-w-[400px] cursor-pointer transition-all duration-200 ${
         isActive 
           ? 'ring-2 ring-cyan-400 ring-opacity-75 shadow-cyan-400/20' 
           : 'hover:ring-1 hover:ring-gray-600'
@@ -831,7 +831,7 @@ const Calculator: React.FC<CalculatorProps> = ({
        </button>
       
       {/* Calculator Type Selector */}
-      <div className="flex justify-center mb-2">
+      <div className="flex justify-center mb-4">
         <select 
           value={calculatorType} 
           onChange={(e) => {
