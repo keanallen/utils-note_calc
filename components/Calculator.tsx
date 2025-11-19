@@ -1,8 +1,15 @@
 
 import React, { useState, useCallback, useImperativeHandle, forwardRef, useEffect, useRef } from 'react';
-import { CloseIcon } from './icons';
+import { CloseIcon, HistoryIcon } from './icons';
 
 type CalculatorType = 'basic' | 'scientific' | 'programmer';
+
+interface HistoryEntry {
+  id: number;
+  expression: string;
+  result: string;
+  timestamp: Date;
+}
 
 const formatNumber = (value: string | number): string => {
   const num = typeof value === 'string' ? parseFloat(value) : value;
@@ -39,13 +46,16 @@ const formatDisplayNumber = (value: string): string => {
 
 const formatExpression = (expr: string): string => {
   // Split expression by operators while preserving them and spaces
-  const parts = expr.split(/(\s*[+\-×÷]\s*)/);
+  const parts = expr.split(/(\s*[+\-\*\/×÷]\s*)/);
   
   return parts.map(part => {
     const trimmed = part.trim();
     
-    // If it's empty, a space, or an operator, return as-is
-    if (trimmed === '' || ['+', '-', '×', '÷'].includes(trimmed)) {
+    // If it's empty, a space, or an operator, handle operator display conversion
+    if (trimmed === '' || ['+', '-', '*', '/', '×', '÷'].includes(trimmed)) {
+      // Convert internal operators to display operators
+      if (trimmed === '*') return part.replace('*', '×');
+      if (trimmed === '/') return part.replace('/', '÷');
       return part;
     }
     
@@ -95,10 +105,13 @@ const Calculator: React.FC<CalculatorProps> = ({
   const [memoryValue, setMemoryValue] = useState<number>(0);
   const [memoryVisible, setMemoryVisible] = useState<boolean>(false);
   const [lastAnswer, setLastAnswer] = useState<number>(0);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [historyOpen, setHistoryOpen] = useState<boolean>(false);
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const displayRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const historyRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll display to the right when content changes
   useEffect(() => {
@@ -120,19 +133,23 @@ const Calculator: React.FC<CalculatorProps> = ({
     return () => clearTimeout(timeoutId);
   }, [display]);
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
         setDropdownOpen(false);
+      }
+      if (historyRef.current && !historyRef.current.contains(target)) {
+        setHistoryOpen(false);
       }
     };
 
-    if (dropdownOpen) {
+    if (dropdownOpen || historyOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [dropdownOpen]);
+  }, [dropdownOpen, historyOpen]);
 
   const calculate = (val1: number, val2: number, op: string): number => {
     switch (op) {
@@ -251,11 +268,22 @@ const Calculator: React.FC<CalculatorProps> = ({
     }
     
     const formattedResult = formatNumber(result!);
+    const formula = `${func}(${formatNumber(currentVal)})`;
+    
+    // Add to history
+    const historyEntry: HistoryEntry = {
+      id: Date.now(),
+      expression: formula,
+      result: formattedResult,
+      timestamp: new Date()
+    };
+    setHistory(prev => [historyEntry, ...prev]);
+    
     setCurrentInput(String(result));
     setDisplay(formattedResult);
     setShowingResult(true);
     setExpression('');
-    setResultFormula(`${func}(${formatNumber(currentVal)})`);
+    setResultFormula(formula);
     setLastAnswer(result!); // Store for Ans button
     setPreviousValue(null);
     setOperator(null);
@@ -363,13 +391,36 @@ const Calculator: React.FC<CalculatorProps> = ({
     }
     
     const formattedResult = formatNumber(result);
+    let formula: string;
+    if (func === 'a/b') {
+      // Convert decimal to fraction for display
+      const decimalPlaces = (currentVal.toString().split('.')[1] || '').length;
+      const denominator = Math.pow(10, decimalPlaces);
+      const numerator = currentVal * denominator;
+      const gcd = (a: number, b: number): number => b === 0 ? a : gcd(b, a % b);
+      const divisor = gcd(Math.abs(numerator), denominator);
+      const simplifiedNum = numerator / divisor;
+      const simplifiedDen = denominator / divisor;
+      formula = `${simplifiedNum}/${simplifiedDen}`;
+      setResultFormula(formula);
+    } else {
+      formula = `${func}(${formatNumber(currentVal)})`;
+      setResultFormula(formula);
+    }
+    
+    // Add to history
+    const historyEntry: HistoryEntry = {
+      id: Date.now(),
+      expression: formula,
+      result: formattedResult,
+      timestamp: new Date()
+    };
+    setHistory(prev => [historyEntry, ...prev]);
+    
     setCurrentInput(String(result));
     setDisplay(formattedResult);
     setShowingResult(true);
     setExpression('');
-    if (func !== 'a/b') {
-      setResultFormula(`${func}(${formatNumber(currentVal)})`);
-    }
     setPreviousValue(null);
     setOperator(null);
     setWaitingForOperand(true);
@@ -445,6 +496,16 @@ const Calculator: React.FC<CalculatorProps> = ({
     }
     
     const formattedResult = formatNumber(result);
+    
+    // Add to history for programmer operations
+    const historyEntry: HistoryEntry = {
+      id: Date.now(),
+      expression: resultFormula, // Already set above for each case
+      result: formattedResult,
+      timestamp: new Date()
+    };
+    setHistory(prev => [historyEntry, ...prev]);
+    
     setCurrentInput(String(result));
     setDisplay(formattedResult);
     setShowingResult(true);
@@ -588,6 +649,15 @@ const Calculator: React.FC<CalculatorProps> = ({
       const rawFormula = expression + String(inputValue);
       const formattedFormula = formatExpression(rawFormula);
       
+      // Add to history
+      const historyEntry: HistoryEntry = {
+        id: Date.now(),
+        expression: formattedFormula,
+        result: formattedResult,
+        timestamp: new Date()
+      };
+      setHistory(prev => [historyEntry, ...prev]);
+      
       setResultFormula(formattedFormula);
       setDisplay(formattedResult);
       setShowingResult(true);
@@ -614,6 +684,26 @@ const Calculator: React.FC<CalculatorProps> = ({
     setShowingResult(false);
     setResultFormula('');
     setIsFormattedResult(false);
+  }, []);
+
+  const clearHistory = useCallback(() => {
+    setHistory([]);
+    setHistoryOpen(false);
+  }, []);
+
+  const useHistoryEntry = useCallback((entry: HistoryEntry) => {
+    // Parse the result number and set it as current input
+    const resultValue = parseFloat(entry.result.replace(/,/g, ''));
+    if (!isNaN(resultValue)) {
+      setCurrentInput(String(resultValue));
+      setDisplay(entry.result);
+      setShowingResult(false);
+      setExpression('');
+      setResultFormula('');
+      setWaitingForOperand(false);
+      setIsFormattedResult(true);
+    }
+    setHistoryOpen(false);
   }, []);
 
   const handlePlusMinus = useCallback(() => {
@@ -963,23 +1053,85 @@ const Calculator: React.FC<CalculatorProps> = ({
        </button>
       
       {/* Calculator Type Selector */}
-      <div ref={dropdownRef} className="flex justify-start items-center mb-4 gap-2 relative">
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            setDropdownOpen(!dropdownOpen);
-          }}
-          className="flex items-center gap-2 focus:outline-none"
-        >
-          <img 
-            src="/assets/calculator.png" 
-            alt="Calculator" 
-            className="w-5 h-5 sm:w-6 sm:h-6"
-          />
-          <span className="text-white text-sm font-medium">
-            {getCalculatorTypeLabel(calculatorType)}
-          </span>
-        </button>
+      <div className="flex justify-start items-center mb-4 gap-2 relative">
+        {/* History Button */}
+        <div ref={historyRef} className="relative">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              setHistoryOpen(!historyOpen);
+            }}
+            className="p-1.5 text-gray-400 hover:text-white transition-colors rounded-md hover:bg-gray-700"
+            title={`History (${history.length} entries)`}
+          >
+            <HistoryIcon />
+          </button>
+          
+          {historyOpen && (
+            <div className="absolute top-8 left-0 bg-gray-700 border border-gray-600 rounded-lg shadow-lg z-20 w-72 max-h-64 overflow-y-auto">
+              <div className="p-2 border-b border-gray-600 flex justify-between items-center">
+                <span className="text-white text-sm font-medium">History</span>
+                {history.length > 0 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      clearHistory();
+                    }}
+                    className="text-xs text-gray-400 hover:text-white px-2 py-1 rounded hover:bg-gray-600"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              {history.length === 0 ? (
+                <div className="p-3 text-gray-400 text-sm text-center">
+                  No calculations yet
+                </div>
+              ) : (
+                <div className="max-h-48 overflow-y-auto">
+                  {history.map((entry) => (
+                    <button
+                      key={entry.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        useHistoryEntry(entry);
+                      }}
+                      className="w-full text-left p-3 hover:bg-gray-600 border-b border-gray-600 last:border-b-0"
+                    >
+                      <div className="text-gray-300 text-xs mb-1">
+                        {entry.expression}
+                      </div>
+                      <div className="text-white text-sm font-mono">
+                        = {entry.result}
+                      </div>
+                      <div className="text-gray-500 text-xs mt-1">
+                        {entry.timestamp.toLocaleTimeString()}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div ref={dropdownRef} className="relative">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              setDropdownOpen(!dropdownOpen);
+            }}
+            className="flex items-center gap-2 focus:outline-none"
+          >
+            <img 
+              src="/assets/calculator.png" 
+              alt="Calculator" 
+              className="w-5 h-5 sm:w-6 sm:h-6"
+            />
+            <span className="text-white text-sm font-medium">
+              {getCalculatorTypeLabel(calculatorType)}
+            </span>
+          </button>
         
         {dropdownOpen && (
           <div className="absolute top-8 left-0 bg-gray-700 border border-gray-600 rounded-lg shadow-lg z-10 min-w-[120px]">
@@ -1018,11 +1170,12 @@ const Calculator: React.FC<CalculatorProps> = ({
             </button>
           </div>
         )}
+        </div>
       </div>
 
       <div 
         ref={displayRef}
-        className="bg-gray-900 text-white text-right p-3 sm:p-4 rounded-lg font-mono min-h-[80px] sm:min-h-[90px] md:min-h-[100px] flex flex-col justify-end"
+        className="bg-gray-900 text-white text-right p-3 sm:p-4 rounded-lg font-mono min-h-20 sm:min-h-[90px] md:min-h-[100px] flex flex-col justify-end"
       >
         {showingResult && resultFormula && (
           <div className="calculator-display-text text-xs sm:text-sm md:text-base text-gray-400 mb-2">
