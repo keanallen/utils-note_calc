@@ -930,7 +930,7 @@ const Calculator: React.FC<CalculatorProps> = ({
         )}
         <div 
           ref={textRef}
-          className={`calculator-display-text ${showingResult ? 'text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold' : 'text-sm sm:text-base md:text-lg lg:text-xl'}`}
+          className={`calculator-display-text ${showingResult ? 'text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold' : 'text-2xl sm:text-base md:text-lg lg:text-3xl'}`}
         >
           {display || '0'}
         </div>
