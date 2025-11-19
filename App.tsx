@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Calculator from './components/Calculator';
 import Notes from './components/Notes';
+import Navigation from './components/Navigation';
+import Footer from './components/Footer';
+import Features from './pages/Features';
+import UseCases from './pages/UseCases';
+import About from './pages/About';
 import { AddIcon } from './components/icons';
 
 export interface CalculatorRef {
@@ -8,6 +13,7 @@ export interface CalculatorRef {
 }
 
 const App: React.FC = () => {
+  const [currentPage, setCurrentPage] = useState<string>('home');
   const initialId = Date.now();
   const [calculators, setCalculators] = useState<{ id: number }[]>([{ id: initialId }]);
   const [notes, setNotes] = useState<string>('');
@@ -116,8 +122,14 @@ const App: React.FC = () => {
     }
   }, [activeCalculatorId]);
 
-  return (
-    <div className="min-h-screen bg-gray-900 text-white font-sans flex flex-col">
+  // Page navigation handler
+  const handleNavigation = useCallback((page: string) => {
+    setCurrentPage(page);
+  }, []);
+
+  // Home page content (original calculator app)
+  const renderHomePage = () => (
+    <>
       <header className="p-4 bg-gray-800/50 backdrop-blur-sm border-b border-gray-700 flex justify-between items-center sticky top-0 z-10">
         <div className="flex items-center gap-4">
           <h1 className="text-xl font-bold text-cyan-400">All-In-One Calculator and Note-Taking App</h1>
@@ -131,8 +143,8 @@ const App: React.FC = () => {
         </button>
       </header>
 
-      <main className="flex-grow flex flex-col lg:flex-row p-4 sm:p-6 gap-6">
-        <div className="flex-grow lg:w-3/5 xl:w-2/3">
+      <main className="grow flex flex-col lg:flex-row p-4 sm:p-6 gap-6">
+        <div className="grow lg:w-3/5 xl:w-2/3">
           {calculators.length > 0 && (
             <div className="mb-4 p-3 bg-gray-800/30 rounded-lg border border-gray-700">
               <p className="text-sm text-gray-400 mb-2">
@@ -168,7 +180,7 @@ const App: React.FC = () => {
             )}
           </div>
         </div>
-        <div className="flex-shrink-0 lg:w-2/5 xl:w-1/3 h-64 lg:h-auto min-h-[400px]">
+        <div className="shrink-0 lg:w-2/5 xl:w-1/3 h-64 lg:h-auto min-h-[400px]">
           <Notes 
             value={notes} 
             onChange={setNotes}
@@ -177,6 +189,31 @@ const App: React.FC = () => {
           />
         </div>
       </main>
+    </>
+  );
+
+  const renderCurrentPage = () => {
+    switch (currentPage) {
+      case 'home':
+        return renderHomePage();
+      case 'features':
+        return <Features />;
+      case 'use-cases':
+        return <UseCases />;
+      case 'about':
+        return <About />;
+      default:
+        return renderHomePage();
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white font-sans flex flex-col">
+      <Navigation currentPage={currentPage} onNavigate={handleNavigation} />
+      <div className="flex-1">
+        {renderCurrentPage()}
+      </div>
+      <Footer />
     </div>
   );
 };
