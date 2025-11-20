@@ -14,16 +14,6 @@ const About: React.FC = () => {
         "description": "Progressive Web App combining calculator functionality with note-taking capabilities",
         "url": "https://notecalc.app",
         "foundingDate": "2024",
-        "founder": {
-          "@type": "Person",
-          "name": "Kean Allen Imam"
-        },
-        "parentOrganization": {
-          "@type": "Organization",
-          "name": "KwikWeb",
-          "url": "https://kwikweb.ph",
-          "description": "Specialists in creating fast, user-friendly web applications that solve real-world problems"
-        },
         "applicationCategory": "ProductivityApplication",
         "operatingSystem": "Web Browser",
         "offers": {
@@ -31,9 +21,6 @@ const About: React.FC = () => {
           "price": "0",
           "priceCurrency": "USD"
         },
-        "sameAs": [
-          "https://kwikweb.ph"
-        ],
         "contactPoint": {
           "@type": "ContactPoint",
           "email": "support@notecalc.app",
@@ -165,7 +152,7 @@ const About: React.FC = () => {
           <h2 className="text-3xl font-bold text-center mb-8 text-cyan-400">The Story Behind Note Calc</h2>
           <div className="prose prose-lg prose-invert max-w-none">
             <p className="text-gray-300 mb-6">
-              Note Calc was conceived during a late-night study session when our founder, frustrated by constantly 
+              Note Calc was conceived during a late-night study session when our team, frustrated by constantly 
               switching between a calculator app and note-taking software, wondered: "Why can't these just be one thing?"
             </p>
             <p className="text-gray-300 mb-6">
@@ -247,35 +234,6 @@ const About: React.FC = () => {
               <h3 className="text-xl font-semibold mb-3 text-white">Accessible to All</h3>
               <p className="text-gray-400">Free, open, and works on any device with a modern browser. No barriers to productivity.</p>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Team Section */}
-      <div className="py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-8 text-cyan-400">Created by KwikWeb</h2>
-          <p className="text-lg text-gray-300 mb-8">
-            Note Calc is developed and maintained by Kean Allen Imam and the team at KwikWeb, 
-            specialists in creating fast, user-friendly web applications that solve real-world problems.
-          </p>
-          <div className="bg-gray-800 rounded-xl p-8">
-            <h3 className="text-xl font-semibold mb-4 text-white">About KwikWeb</h3>
-            <p className="text-gray-300 mb-4">
-              KwikWeb focuses on building Progressive Web Apps that bridge the gap between web and native applications. 
-              We believe in creating tools that are fast, accessible, and genuinely useful for everyday tasks.
-            </p>
-            <a 
-              href="https://kwikweb.ph" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center text-cyan-400 hover:text-cyan-300 transition-colors"
-            >
-              Visit KwikWeb.ph
-              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </a>
           </div>
         </div>
       </div>
