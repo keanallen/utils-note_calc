@@ -20,6 +20,7 @@ const App: React.FC = () => {
   const [activeCalculatorId, setActiveCalculatorId] = useState<number | null>(initialId);
   const [temporarilyInactiveCalculatorId, setTemporarilyInactiveCalculatorId] = useState<number | null>(null);
   const calculatorRefs = useRef<Map<number, CalculatorRef>>(new Map());
+  const insertCalculationResultRef = useRef<((result: string) => void) | null>(null);
 
   useEffect(() => {
     try {
@@ -108,6 +109,10 @@ const App: React.FC = () => {
     }
   }, [temporarilyInactiveCalculatorId]);
 
+  const handleInsertCalculationResult = useCallback((insertFn: (result: string) => void) => {
+    insertCalculationResultRef.current = insertFn;
+  }, []);
+
   const addCalculator = useCallback(() => {
     const newId = Date.now();
     setCalculators(prev => [...prev, { id: newId }]);
@@ -168,6 +173,7 @@ const App: React.FC = () => {
                 onSetActive={setCalculatorActive}
                 onRegisterRef={registerCalculatorRef}
                 onUnregisterRef={unregisterCalculatorRef}
+                onCalculationResult={insertCalculationResultRef.current}
               />
             ))}
              {calculators.length === 0 && (
@@ -186,6 +192,7 @@ const App: React.FC = () => {
             onChange={setNotes}
             onFocus={handleNotesFocus}
             onBlur={handleNotesBlur}
+            onInsertCalculationResult={handleInsertCalculationResult}
           />
         </div>
       </main>

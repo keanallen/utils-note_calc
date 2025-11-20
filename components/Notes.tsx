@@ -11,6 +11,7 @@ interface NotesProps {
   onChange: (value: string) => void;
   onFocus?: () => void;
   onBlur?: () => void;
+  onInsertCalculationResult?: (insertFn: (result: string) => void) => void;
 }
 
 const QuillToolbar = () => (
@@ -44,13 +45,15 @@ const QuillToolbar = () => (
 );
 
 
-const Notes: React.FC<NotesProps> = ({ value, onChange, onFocus, onBlur }) => {
+const Notes: React.FC<NotesProps> = ({ value, onChange, onFocus, onBlur, onInsertCalculationResult }) => {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const quillInstance = useRef<any>(null);
+  const [cursorPosition, setCursorPosition] = useState<number>(0);
 
   const [isCopied, setIsCopied] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [autoInsertEnabled, setAutoInsertEnabled] = useState(false);
   
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -70,7 +73,89 @@ const Notes: React.FC<NotesProps> = ({ value, onChange, onFocus, onBlur }) => {
       const quill = new Quill(editorRef.current, {
         theme: 'snow',
         modules: {
-          toolbar: '#quill-toolbar'
+          toolbar: '#quill-toolbar',
+          keyboard: {
+            bindings: {
+              'custom-up': {
+                key: 'ArrowUp',
+                handler: function(range: any) {
+                  if (range.index === 0) return true; // Let Quill handle if at start
+                  const [line] = this.quill.getLine(range.index);
+                  if (line && line.prev) {
+                    const newIndex = Math.max(0, line.prev.offset() + Math.min(range.index - line.offset(), line.prev.length() - 1));
+                    this.quill.setSelection(newIndex);
+                    // Update cursor position in React state
+                    setTimeout(() => {
+                      const selection = this.quill.getSelection();
+                      if (selection) {
+                        setCursorPosition(selection.index);
+                      }
+                    }, 0);
+                    return false;
+                  }
+                  return true;
+                }
+              },
+              'custom-down': {
+                key: 'ArrowDown',
+                handler: function(range: any) {
+                  const [line] = this.quill.getLine(range.index);
+                  if (line && line.next) {
+                    const newIndex = line.next.offset() + Math.min(range.index - line.offset(), line.next.length() - 1);
+                    this.quill.setSelection(newIndex);
+                    // Update cursor position in React state
+                    setTimeout(() => {
+                      const selection = this.quill.getSelection();
+                      if (selection) {
+                        setCursorPosition(selection.index);
+                      }
+                    }, 0);
+                    return false;
+                  }
+                  return true;
+                }
+              },
+              'custom-left': {
+                key: 'ArrowLeft',
+                handler: function(range: any) {
+                  // Let Quill handle left arrow, then update our cursor position
+                  setTimeout(() => {
+                    const selection = this.quill.getSelection();
+                    if (selection) {
+                      setCursorPosition(selection.index);
+                    }
+                  }, 0);
+                  return true; // Let Quill handle the movement
+                }
+              },
+              'custom-right': {
+                key: 'ArrowRight',
+                handler: function(range: any) {
+                  // Let Quill handle right arrow, then update our cursor position
+                  setTimeout(() => {
+                    const selection = this.quill.getSelection();
+                    if (selection) {
+                      setCursorPosition(selection.index);
+                    }
+                  }, 0);
+                  return true; // Let Quill handle the movement
+                }
+              },
+              'custom-enter': {
+                key: 'Enter',
+                handler: function(range: any) {
+                  // Let Quill handle enter, then update our cursor position
+                  setTimeout(() => {
+                    const selection = this.quill.getSelection();
+                    if (selection) {
+                      setCursorPosition(selection.index);
+                    }
+                  }, 0);
+                  return true; // Let Quill handle the newline
+                }
+              }
+            }
+          }
         },
         placeholder: 'Type your notes here...',
       });
@@ -80,26 +165,88 @@ const Notes: React.FC<NotesProps> = ({ value, onChange, onFocus, onBlur }) => {
         quill.clipboard.dangerouslyPasteHTML(value);
       }
       
+      // Track cursor position changes
+      quill.on('selection-change', (range) => {
+        if (range) {
+          setCursorPosition(range.index);
+          if (onFocus) {
+            onFocus();
+          }
+        } else if (onBlur) {
+          onBlur();
+        }
+      });
+
+      // Also track cursor position on text changes to keep it current
       quill.on('text-change', (_delta, _oldDelta, source) => {
         if (source === 'user') {
           onChange(quill.root.innerHTML);
+          // Update cursor position after text changes with a slight delay to ensure Quill has updated
+          setTimeout(() => {
+            const selection = quill.getSelection();
+            if (selection) {
+              setCursorPosition(selection.index);
+            }
+          }, 0);
         }
       });
-      
-      // Add focus/blur handlers for calculator interaction
-      if (onFocus) {
-        quill.on('selection-change', (range) => {
-          if (range) {
-            onFocus();
-          } else if (onBlur) {
-            onBlur();
+
+      // Additional event listeners for better cursor tracking
+      quill.root.addEventListener('keyup', () => {
+        setTimeout(() => {
+          const selection = quill.getSelection();
+          if (selection) {
+            setCursorPosition(selection.index);
           }
-        });
-      }
+        }, 0);
+      });
+
+      quill.root.addEventListener('click', () => {
+        setTimeout(() => {
+          const selection = quill.getSelection();
+          if (selection) {
+            setCursorPosition(selection.index);
+          }
+        }, 0);
+      });
       
       quillInstance.current = quill;
     }
   }, [value, onChange, onFocus, onBlur]);
+
+  // Register the insert function with the parent component whenever autoInsertEnabled changes
+  useEffect(() => {
+    if (onInsertCalculationResult && quillInstance.current) {
+      onInsertCalculationResult((result: string) => {
+        if (autoInsertEnabled && quillInstance.current) {
+          // Get the current selection/cursor position from Quill
+          const selection = quillInstance.current.getSelection();
+          let insertIndex;
+          
+          if (selection && selection.length === 0) {
+            // User has cursor positioned somewhere, use that exact position
+            insertIndex = selection.index;
+          } else if (selection && selection.length > 0) {
+            // User has text selected, replace the selection
+            insertIndex = selection.index;
+            // First delete the selected text
+            quillInstance.current.deleteText(selection.index, selection.length, 'user');
+          } else {
+            // No selection, use the stored cursor position as fallback
+            insertIndex = cursorPosition;
+          }
+          
+          // Insert the calculation result at the determined position
+          quillInstance.current.insertText(insertIndex, ` = ${result}`, 'user');
+          
+          // Move cursor to end of inserted text
+          const newCursorPos = insertIndex + ` = ${result}`.length;
+          quillInstance.current.setSelection(newCursorPos);
+          setCursorPosition(newCursorPos);
+        }
+      });
+    }
+  }, [onInsertCalculationResult, autoInsertEnabled, cursorPosition]);
 
   const handleCopy = useCallback(async () => {
     if (quillInstance.current) {
@@ -214,6 +361,10 @@ const Notes: React.FC<NotesProps> = ({ value, onChange, onFocus, onBlur }) => {
       }
     }
   }, []);
+
+  const handleToggleAutoInsert = useCallback(() => {
+    setAutoInsertEnabled(!autoInsertEnabled);
+  }, [autoInsertEnabled]);
 
   const downloadFile = (filename: string, content: BlobPart, mime: string) => {
     try {
@@ -539,20 +690,39 @@ const Notes: React.FC<NotesProps> = ({ value, onChange, onFocus, onBlur }) => {
     }
   }, [isDownloading]);
 
-  const ToolButton: React.FC<{onClick: () => void, children: React.ReactNode, ariaLabel: string}> = ({onClick, children, ariaLabel}) => (
+  const ToolButton: React.FC<{onClick: () => void, children: React.ReactNode, ariaLabel: string, className?: string}> = ({onClick, children, ariaLabel, className = ''}) => (
       <button 
         onClick={onClick}
         aria-label={ariaLabel}
-        className="p-2 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500">
+        className={`p-2 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500 ${className}`}>
         {children}
       </button>
   );
 
   return (
     <div className="h-full flex flex-col bg-gray-800 rounded-2xl shadow-2xl p-4 notes-container">
-      <header className="flex justify-between items-center mb-2 flex-shrink-0">
+      <header className="flex justify-between items-center mb-2 shrink-0">
         <h2 className="text-lg font-semibold text-cyan-400">Notes</h2>
-        <div className="flex items-center gap-2" ref={wrapperRef}>
+        <div className="flex items-center gap-3" ref={wrapperRef}>
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-300 font-medium">Auto Insert</label>
+            <button
+              onClick={handleToggleAutoInsert}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-gray-800 ${
+                autoInsertEnabled ? 'bg-cyan-600' : 'bg-gray-600'
+              }`}
+              role="switch"
+              aria-checked={autoInsertEnabled}
+              aria-label={autoInsertEnabled ? 'Disable auto-insert calculation results' : 'Enable auto-insert calculation results'}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  autoInsertEnabled ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+          
           <ToolButton onClick={handleCopy} ariaLabel={isCopied ? 'Copied to clipboard' : 'Copy notes to clipboard'}>
             {isCopied ? <CheckIcon /> : <CopyIcon />}
           </ToolButton>

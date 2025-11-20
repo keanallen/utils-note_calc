@@ -79,6 +79,7 @@ interface CalculatorProps {
   onSetActive: (id: number) => void;
   onRegisterRef: (id: number, ref: any) => void;
   onUnregisterRef: (id: number) => void;
+  onCalculationResult?: (result: string) => void;
 }
 
 const Calculator: React.FC<CalculatorProps> = ({ 
@@ -87,7 +88,8 @@ const Calculator: React.FC<CalculatorProps> = ({
   onClose, 
   onSetActive, 
   onRegisterRef, 
-  onUnregisterRef 
+  onUnregisterRef,
+  onCalculationResult
 }) => {
   const [display, setDisplay] = useState('0');
   const [currentValue, setCurrentValue] = useState<number | null>(0);
@@ -279,6 +281,11 @@ const Calculator: React.FC<CalculatorProps> = ({
     };
     setHistory(prev => [historyEntry, ...prev]);
     
+    // Trigger auto-insert if enabled
+    if (onCalculationResult) {
+      onCalculationResult(formattedResult);
+    }
+    
     setCurrentInput(String(result));
     setDisplay(formattedResult);
     setShowingResult(true);
@@ -289,7 +296,7 @@ const Calculator: React.FC<CalculatorProps> = ({
     setOperator(null);
     setWaitingForOperand(true);
     setIsFormattedResult(true);
-  }, [currentInput, angleMode]);
+  }, [currentInput, angleMode, onCalculationResult]);
 
   const handleSpecialFunction = useCallback((func: string) => {
     switch (func) {
@@ -417,6 +424,11 @@ const Calculator: React.FC<CalculatorProps> = ({
     };
     setHistory(prev => [historyEntry, ...prev]);
     
+    // Trigger auto-insert if enabled
+    if (onCalculationResult) {
+      onCalculationResult(formattedResult);
+    }
+    
     setCurrentInput(String(result));
     setDisplay(formattedResult);
     setShowingResult(true);
@@ -425,7 +437,7 @@ const Calculator: React.FC<CalculatorProps> = ({
     setOperator(null);
     setWaitingForOperand(true);
     setIsFormattedResult(true);
-  }, [currentInput]);
+  }, [currentInput, onCalculationResult]);
 
   const handleProgrammerFunction = useCallback((func: string) => {
     // For hex inputs, parse as base 16, otherwise base 10
@@ -506,6 +518,11 @@ const Calculator: React.FC<CalculatorProps> = ({
     };
     setHistory(prev => [historyEntry, ...prev]);
     
+    // Trigger auto-insert if enabled
+    if (onCalculationResult) {
+      onCalculationResult(formattedResult);
+    }
+    
     setCurrentInput(String(result));
     setDisplay(formattedResult);
     setShowingResult(true);
@@ -514,7 +531,7 @@ const Calculator: React.FC<CalculatorProps> = ({
     setOperator(null);
     setWaitingForOperand(true);
     setIsFormattedResult(true);
-  }, [currentInput, previousValue, operator]);
+  }, [currentInput, previousValue, operator, onCalculationResult]);
 
   const handleDigit = useCallback((digit: string) => {
     // For programmer calculator, only allow hex digits when appropriate
@@ -658,6 +675,11 @@ const Calculator: React.FC<CalculatorProps> = ({
       };
       setHistory(prev => [historyEntry, ...prev]);
       
+      // Trigger auto-insert if enabled
+      if (onCalculationResult) {
+        onCalculationResult(formattedResult);
+      }
+      
       setResultFormula(formattedFormula);
       setDisplay(formattedResult);
       setShowingResult(true);
@@ -670,7 +692,7 @@ const Calculator: React.FC<CalculatorProps> = ({
       setShowingOperator(false);
       setIsFormattedResult(true);
     }
-  }, [expression, currentInput, operator, previousValue]);
+  }, [expression, currentInput, operator, previousValue, onCalculationResult]);
 
   const handleClear = useCallback(() => {
     setDisplay('0');
