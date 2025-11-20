@@ -23,6 +23,7 @@ const Features: React.FC = () => {
           "Scientific Calculator with advanced mathematical functions",
           "Programmer Calculator with binary, hexadecimal, and octal conversions",
           "Rich Text Editor with formatting and styling options",
+          "Auto-Insert Calculation Results directly into notes",
           "Multiple Export Formats (PDF, Word, Plain Text)",
           "Offline Functionality with Progressive Web App technology",
           "Auto-save with Local Storage",
@@ -83,6 +84,18 @@ const Features: React.FC = () => {
         "Bullet points and numbered lists",
         "Blockquotes for important information",
         "Link insertion and management"
+      ]
+    },
+    {
+      title: "Auto-Insert Calculation Results",
+      description: "Seamlessly integrate calculations into your notes with automatic result insertion at your cursor position.",
+      icon: "⚡",
+      details: [
+        "Toggle auto-insert on/off with a simple slider",
+        "Results automatically appear at cursor position",
+        "Works with all calculator types (Basic, Scientific, Programmer)",
+        "Real-time cursor position tracking",
+        "Smart text replacement for selected content"
       ]
     },
     {
