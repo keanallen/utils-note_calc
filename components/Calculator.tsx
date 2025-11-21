@@ -783,16 +783,42 @@ const Calculator: React.FC<CalculatorProps> = ({
       // Remove the last operator from expression
       const newExpression = expression.slice(0, -3); // Remove " + " or similar
       setExpression(newExpression);
-      const formattedInput = formatDisplayNumber(currentInput);
+      
+      // Find the last number in the expression or use the original input
+      let displayValue;
       if (newExpression === '') {
-        setDisplay(formattedInput);
+        // If no expression left, show the current input (first number)
+        displayValue = formatDisplayNumber(currentInput);
+        setOperator(null);
+        setPreviousValue(null);
       } else {
+        // Extract the last number from the expression for display
+        const lastSpaceIndex = newExpression.lastIndexOf(' ');
+        const lastNumber = lastSpaceIndex >= 0 ? newExpression.substring(lastSpaceIndex + 1) : newExpression;
         const formattedExpression = formatExpression(newExpression.trim());
-        setDisplay(formattedExpression + ' ' + formattedInput);
+        displayValue = formattedExpression;
+        // Update currentInput to the last number in the expression
+        setCurrentInput(lastNumber);
+        
+        // Check if there's still an operator in the remaining expression
+        const secondLastSpaceIndex = newExpression.lastIndexOf(' ', lastSpaceIndex - 1);
+        if (secondLastSpaceIndex >= 0) {
+          const remainingOperator = newExpression.substring(secondLastSpaceIndex + 1, lastSpaceIndex);
+          setOperator(remainingOperator);
+          
+          // Find the first number for previousValue
+          const firstSpaceIndex = newExpression.indexOf(' ');
+          const firstNumber = firstSpaceIndex >= 0 ? newExpression.substring(0, firstSpaceIndex) : newExpression;
+          setPreviousValue(parseFloat(firstNumber.replace(/,/g, '')));
+        } else {
+          setOperator(null);
+          setPreviousValue(null);
+        }
       }
+      
+      setDisplay(displayValue);
       setShowingOperator(false);
       setWaitingForOperand(false);
-      setOperator(null);
     } else if (currentInput.length > 1 && currentInput !== '0') {
       // Remove formatting, remove character, then reformat
       const rawValue = currentInput.replace(/,/g, '');
