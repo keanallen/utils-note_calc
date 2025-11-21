@@ -185,9 +185,9 @@ const Features: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <main className="min-h-screen bg-gray-900 text-white">
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-gray-800 to-gray-900 py-16">
+      <header className="bg-gradient-to-b from-gray-800 to-gray-900 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6 text-cyan-400">
             Powerful Features
@@ -196,82 +196,82 @@ const Features: React.FC = () => {
             Note Calc combines advanced calculator functionality with rich text note-taking in a fast, installable Progressive Web App.
           </p>
         </div>
-      </div>
+      </header>
 
       {/* Features Grid */}
-      <div className="py-16">
+      <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" role="list">
             {features.map((feature, index) => (
-              <div key={index} className="bg-gray-800 rounded-2xl p-6 hover:bg-gray-750 transition-colors">
-                <div className="text-4xl mb-4">{feature.icon}</div>
+              <article key={index} className="bg-gray-800 rounded-2xl p-6 hover:bg-gray-750 transition-colors" role="listitem">
+                <div className="text-4xl mb-4" aria-hidden="true">{feature.icon}</div>
                 <h3 className="text-xl font-semibold mb-3 text-cyan-400">{feature.title}</h3>
                 <p className="text-gray-300 mb-4">{feature.description}</p>
                 <ul className="space-y-2">
                   {feature.details.map((detail, detailIndex) => (
                     <li key={detailIndex} className="flex items-start">
-                      <span className="text-cyan-400 mr-2">•</span>
+                      <span className="text-cyan-400 mr-2" aria-hidden="true">•</span>
                       <span className="text-sm text-gray-400">{detail}</span>
                     </li>
                   ))}
                 </ul>
-              </div>
+              </article>
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Technical Specifications */}
-      <div className="bg-gray-800 py-16">
+      <section className="bg-gray-800 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center mb-12 text-cyan-400">Technical Specifications</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" role="list">
+            <article className="text-center" role="listitem">
               <div className="text-3xl font-bold text-white mb-2">3</div>
               <div className="text-cyan-400 font-semibold mb-1">Calculator Types</div>
               <div className="text-sm text-gray-400">Basic, Scientific, Programmer</div>
-            </div>
-            <div className="text-center">
+            </article>
+            <article className="text-center" role="listitem">
               <div className="text-3xl font-bold text-white mb-2">5</div>
               <div className="text-cyan-400 font-semibold mb-1">Export Formats</div>
               <div className="text-sm text-gray-400">PDF, DOCX, TXT, HTML, Clipboard</div>
-            </div>
-            <div className="text-center">
+            </article>
+            <article className="text-center" role="listitem">
               <div className="text-3xl font-bold text-white mb-2">100%</div>
               <div className="text-cyan-400 font-semibold mb-1">Offline Capable</div>
               <div className="text-sm text-gray-400">Works without internet connection</div>
-            </div>
-            <div className="text-center">
+            </article>
+            <article className="text-center" role="listitem">
               <div className="text-3xl font-bold text-white mb-2">0</div>
               <div className="text-cyan-400 font-semibold mb-1">Account Required</div>
               <div className="text-sm text-gray-400">No registration or login needed</div>
-            </div>
+            </article>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Browser Support */}
-      <div className="py-16">
+      <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-8 text-cyan-400">Universal Compatibility</h2>
           <p className="text-xl text-gray-300 mb-8">Works on all modern browsers and devices</p>
-          <div className="flex flex-wrap justify-center items-center gap-8">
-            <div className="text-gray-400">
+          <div className="flex flex-wrap justify-center items-center gap-8" role="list">
+            <article className="text-gray-400" role="listitem">
               <div className="text-lg font-semibold">Desktop</div>
               <div className="text-sm">Windows • macOS • Linux</div>
-            </div>
-            <div className="text-gray-400">
+            </article>
+            <article className="text-gray-400" role="listitem">
               <div className="text-lg font-semibold">Mobile</div>
               <div className="text-sm">iOS • Android</div>
-            </div>
-            <div className="text-gray-400">
+            </article>
+            <article className="text-gray-400" role="listitem">
               <div className="text-lg font-semibold">Browsers</div>
               <div className="text-sm">Chrome • Firefox • Safari • Edge</div>
-            </div>
+            </article>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 };
 

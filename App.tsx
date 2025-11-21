@@ -142,42 +142,44 @@ const App: React.FC = () => {
         <button
           onClick={addCalculator}
           className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg flex items-center transition-transform transform hover:scale-105"
+          aria-label="Add new calculator"
         >
           <AddIcon />
           <span className="ml-2 hidden sm:inline">Add Calculator</span>
         </button>
       </header>
 
-      <main className="grow flex flex-col lg:flex-row p-4 sm:p-6 gap-6">
+      <section className="grow flex flex-col lg:flex-row p-4 sm:p-6 gap-6">
         <div className="grow lg:w-3/5 xl:w-2/3">
           {calculators.length > 0 && (
-            <div className="mb-4 p-3 bg-gray-800/30 rounded-lg border border-gray-700">
+            <aside className="mb-4 p-3 bg-gray-800/30 rounded-lg border border-gray-700" aria-label="Keyboard shortcuts help">
               <p className="text-sm text-gray-400 mb-2">
                 <strong>Keyboard Shortcuts:</strong> Click on a calculator to select it, then use:
               </p>
-              <div className="text-xs text-gray-500 grid grid-cols-2 md:grid-cols-4 gap-2">
-                <span>• Numbers: 0-9</span>
-                <span>• Operators: + - * /</span>
-                <span>• Enter: Calculate</span>
-                <span>• Esc: Clear, ⌫: Backspace</span>
+              <div className="text-xs text-gray-500 grid grid-cols-2 md:grid-cols-4 gap-2" role="list">
+                <span role="listitem">• Numbers: 0-9</span>
+                <span role="listitem">• Operators: + - * /</span>
+                <span role="listitem">• Enter: Calculate</span>
+                <span role="listitem">• Esc: Clear, ⌫: Backspace</span>
               </div>
-            </div>
+            </aside>
           )}
-          <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4 auto-rows-min">
+          <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4 auto-rows-min" role="list" aria-label="Calculator instances">
             {calculators.map(calc => (
-              <Calculator 
-                key={calc.id} 
-                id={calc.id} 
-                isActive={activeCalculatorId === calc.id}
-                onClose={removeCalculator} 
-                onSetActive={setCalculatorActive}
-                onRegisterRef={registerCalculatorRef}
-                onUnregisterRef={unregisterCalculatorRef}
-                onCalculationResult={insertCalculationResultRef.current}
-              />
+              <div key={calc.id} role="listitem">
+                <Calculator 
+                  id={calc.id} 
+                  isActive={activeCalculatorId === calc.id}
+                  onClose={removeCalculator} 
+                  onSetActive={setCalculatorActive}
+                  onRegisterRef={registerCalculatorRef}
+                  onUnregisterRef={unregisterCalculatorRef}
+                  onCalculationResult={insertCalculationResultRef.current}
+                />
+              </div>
             ))}
              {calculators.length === 0 && (
-              <div className="md:col-span-2 2xl:col-span-3 flex items-center justify-center h-64 text-gray-500 text-center">
+              <div className="md:col-span-2 2xl:col-span-3 flex items-center justify-center h-64 text-gray-500 text-center" role="status" aria-label="No calculators available">
                 <div>
                   <p className="text-lg mb-2">Click "Add Calculator" to get started.</p>
                   <p className="text-sm">Tip: Click on a calculator to make it active, then use your keyboard for input!</p>
@@ -186,7 +188,7 @@ const App: React.FC = () => {
             )}
           </div>
         </div>
-        <div className="shrink-0 lg:w-2/5 xl:w-1/3 h-64 lg:h-auto min-h-[400px]">
+        <aside className="shrink-0 lg:w-2/5 xl:w-1/3 h-64 lg:h-auto min-h-[400px]" aria-label="Notes editor">
           <Notes 
             value={notes} 
             onChange={setNotes}
@@ -194,8 +196,8 @@ const App: React.FC = () => {
             onBlur={handleNotesBlur}
             onInsertCalculationResult={handleInsertCalculationResult}
           />
-        </div>
-      </main>
+        </aside>
+      </section>
     </>
   );
 
@@ -217,9 +219,9 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-white font-sans flex flex-col">
       <Navigation currentPage={currentPage} onNavigate={handleNavigation} />
-      <div className="flex-1">
+      <main className="flex-1">
         {renderCurrentPage()}
-      </div>
+      </main>
       <Footer />
     </div>
   );

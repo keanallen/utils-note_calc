@@ -198,9 +198,9 @@ const UseCases: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <main className="min-h-screen bg-gray-900 text-white">
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-gray-800 to-gray-900 py-16">
+      <header className="bg-gradient-to-b from-gray-800 to-gray-900 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6 text-cyan-400">
             Use Cases
@@ -209,67 +209,67 @@ const UseCases: React.FC = () => {
             Discover how Note Calc empowers professionals, students, and everyday users to calculate smarter and document better.
           </p>
         </div>
-      </div>
+      </header>
 
       {/* Use Cases */}
-      <div className="py-16">
+      <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {useCases.map((useCase, index) => (
-            <div key={index} className={`mb-20 ${index % 2 === 1 ? 'bg-gray-800 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-16 rounded-none sm:rounded-2xl' : ''}`}>
-              <div className="text-center mb-12">
-                <div className="text-6xl mb-4">{useCase.icon}</div>
+            <article key={index} className={`mb-20 ${index % 2 === 1 ? 'bg-gray-800 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-16 rounded-none sm:rounded-2xl' : ''}`}>
+              <header className="text-center mb-12">
+                <div className="text-6xl mb-4" aria-hidden="true">{useCase.icon}</div>
                 <h2 className="text-3xl md:text-4xl font-bold mb-2 text-cyan-400">{useCase.title}</h2>
                 <p className="text-xl text-gray-400 mb-4">{useCase.subtitle}</p>
                 <p className="text-lg text-gray-300 max-w-4xl mx-auto">{useCase.description}</p>
-              </div>
+              </header>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8" role="list">
                 {useCase.scenarios.map((scenario, scenarioIndex) => (
-                  <div key={scenarioIndex} className="bg-gray-800 rounded-xl p-6 hover:bg-gray-750 transition-colors">
+                  <article key={scenarioIndex} className="bg-gray-800 rounded-xl p-6 hover:bg-gray-750 transition-colors" role="listitem">
                     <h3 className="text-xl font-semibold mb-3 text-white">{scenario.title}</h3>
                     <p className="text-gray-300 mb-4">{scenario.description}</p>
                     <ul className="space-y-2">
                       {scenario.features.map((feature, featureIndex) => (
                         <li key={featureIndex} className="flex items-start">
-                          <span className="text-cyan-400 mr-2 mt-1">✓</span>
+                          <span className="text-cyan-400 mr-2 mt-1" aria-hidden="true">✓</span>
                           <span className="text-sm text-gray-400">{feature}</span>
                         </li>
                       ))}
                     </ul>
-                  </div>
+                  </article>
                 ))}
               </div>
-            </div>
+            </article>
           ))}
         </div>
-      </div>
+      </section>
 
       {/* Success Stories Section */}
-      <div className="bg-gray-800 py-16">
+      <section className="bg-gray-800 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center mb-12 text-cyan-400">Why Users Love Note Calc</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="text-4xl mb-4">🚀</div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8" role="list">
+            <article className="text-center" role="listitem">
+              <div className="text-4xl mb-4" aria-hidden="true">🚀</div>
               <h3 className="text-xl font-semibold mb-2 text-white">Productivity Boost</h3>
-              <p className="text-gray-400">"Having calculations and notes in one place saves me hours every week. Perfect for engineering projects!"</p>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl mb-4">📱</div>
+              <blockquote className="text-gray-400">"Having calculations and notes in one place saves me hours every week. Perfect for engineering projects!"</blockquote>
+            </article>
+            <article className="text-center" role="listitem">
+              <div className="text-4xl mb-4" aria-hidden="true">📱</div>
               <h3 className="text-xl font-semibold mb-2 text-white">Works Everywhere</h3>
-              <p className="text-gray-400">"I love that it works offline on my phone, tablet, and laptop. Always available when I need it."</p>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl mb-4">🎯</div>
+              <blockquote className="text-gray-400">"I love that it works offline on my phone, tablet, and laptop. Always available when I need it."</blockquote>
+            </article>
+            <article className="text-center" role="listitem">
+              <div className="text-4xl mb-4" aria-hidden="true">🎯</div>
               <h3 className="text-xl font-semibold mb-2 text-white">Simple Yet Powerful</h3>
-              <p className="text-gray-400">"Finally, a calculator that can handle both simple math and complex scientific calculations with ease."</p>
-            </div>
+              <blockquote className="text-gray-400">"Finally, a calculator that can handle both simple math and complex scientific calculations with ease."</blockquote>
+            </article>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Call to Action */}
-      <div className="py-16">
+      <section className="py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-6 text-cyan-400">Ready to Get Started?</h2>
           <p className="text-xl text-gray-300 mb-8">
@@ -284,8 +284,8 @@ const UseCases: React.FC = () => {
             </button>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 };
 
