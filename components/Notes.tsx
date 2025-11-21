@@ -79,16 +79,18 @@ const Notes: React.FC<NotesProps> = ({ value, onChange, onFocus, onBlur, onInser
               'custom-up': {
                 key: 'ArrowUp',
                 handler: function(range: any) {
-                  if (range.index === 0) return true; // Let Quill handle if at start
+                  if (!this.quill || !range || range.index === 0) return true; // Let Quill handle if at start or no context
                   const [line] = this.quill.getLine(range.index);
                   if (line && line.prev) {
                     const newIndex = Math.max(0, line.prev.offset() + Math.min(range.index - line.offset(), line.prev.length() - 1));
                     this.quill.setSelection(newIndex);
                     // Update cursor position in React state
                     setTimeout(() => {
-                      const selection = this.quill.getSelection();
-                      if (selection) {
-                        setCursorPosition(selection.index);
+                      if (this.quill) {
+                        const selection = this.quill.getSelection();
+                        if (selection) {
+                          setCursorPosition(selection.index);
+                        }
                       }
                     }, 0);
                     return false;
@@ -99,15 +101,18 @@ const Notes: React.FC<NotesProps> = ({ value, onChange, onFocus, onBlur, onInser
               'custom-down': {
                 key: 'ArrowDown',
                 handler: function(range: any) {
+                  if (!this.quill || !range) return true;
                   const [line] = this.quill.getLine(range.index);
                   if (line && line.next) {
                     const newIndex = line.next.offset() + Math.min(range.index - line.offset(), line.next.length() - 1);
                     this.quill.setSelection(newIndex);
                     // Update cursor position in React state
                     setTimeout(() => {
-                      const selection = this.quill.getSelection();
-                      if (selection) {
-                        setCursorPosition(selection.index);
+                      if (this.quill) {
+                        const selection = this.quill.getSelection();
+                        if (selection) {
+                          setCursorPosition(selection.index);
+                        }
                       }
                     }, 0);
                     return false;
@@ -118,11 +123,14 @@ const Notes: React.FC<NotesProps> = ({ value, onChange, onFocus, onBlur, onInser
               'custom-left': {
                 key: 'ArrowLeft',
                 handler: function(range: any) {
+                  if (!this.quill) return true;
                   // Let Quill handle left arrow, then update our cursor position
                   setTimeout(() => {
-                    const selection = this.quill.getSelection();
-                    if (selection) {
-                      setCursorPosition(selection.index);
+                    if (this.quill) {
+                      const selection = this.quill.getSelection();
+                      if (selection) {
+                        setCursorPosition(selection.index);
+                      }
                     }
                   }, 0);
                   return true; // Let Quill handle the movement
@@ -131,11 +139,14 @@ const Notes: React.FC<NotesProps> = ({ value, onChange, onFocus, onBlur, onInser
               'custom-right': {
                 key: 'ArrowRight',
                 handler: function(range: any) {
+                  if (!this.quill) return true;
                   // Let Quill handle right arrow, then update our cursor position
                   setTimeout(() => {
-                    const selection = this.quill.getSelection();
-                    if (selection) {
-                      setCursorPosition(selection.index);
+                    if (this.quill) {
+                      const selection = this.quill.getSelection();
+                      if (selection) {
+                        setCursorPosition(selection.index);
+                      }
                     }
                   }, 0);
                   return true; // Let Quill handle the movement
@@ -144,11 +155,14 @@ const Notes: React.FC<NotesProps> = ({ value, onChange, onFocus, onBlur, onInser
               'custom-enter': {
                 key: 'Enter',
                 handler: function(range: any) {
+                  if (!this.quill) return true;
                   // Let Quill handle enter, then update our cursor position
                   setTimeout(() => {
-                    const selection = this.quill.getSelection();
-                    if (selection) {
-                      setCursorPosition(selection.index);
+                    if (this.quill) {
+                      const selection = this.quill.getSelection();
+                      if (selection) {
+                        setCursorPosition(selection.index);
+                      }
                     }
                   }, 0);
                   return true; // Let Quill handle the newline
@@ -216,7 +230,7 @@ const Notes: React.FC<NotesProps> = ({ value, onChange, onFocus, onBlur, onInser
 
   // Register the insert function with the parent component whenever autoInsertEnabled changes
   useEffect(() => {
-    if (onInsertCalculationResult && quillInstance.current) {
+    if (onInsertCalculationResult && quillInstance.current && autoInsertEnabled !== null) {
       onInsertCalculationResult((result: string) => {
         if (autoInsertEnabled && quillInstance.current) {
           // Get the current selection/cursor position from Quill

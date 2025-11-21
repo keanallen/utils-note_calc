@@ -121,7 +121,6 @@ const Calculator: React.FC<CalculatorProps> = ({
       // Scroll the text container to show the latest input
       if (textRef.current) {
         const element = textRef.current;
-        console.log('Scrolling text - scrollWidth:', element.scrollWidth, 'clientWidth:', element.clientWidth);
         element.scrollLeft = element.scrollWidth;
       }
       

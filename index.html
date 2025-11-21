@@ -43,11 +43,11 @@
     <script>
       window.addEventListener('load', () => {
         console.log('Checking external libraries:');
-        console.log('jsPDF available:', typeof jsPDF !== 'undefined');
-        console.log('docx available:', typeof docx !== 'undefined');
-        console.log('window.jspdf:', !!(window.jspdf));
-        console.log('window.jsPDF:', !!(window.jsPDF));
-        console.log('window.docx:', !!(window.docx));
+        console.log('jsPDF available:', typeof jsPDF !== 'undefined' ? '✅' : '❌');
+        console.log('docx available:', typeof docx !== 'undefined' ? '✅' : '❌');
+        console.log('window.jspdf:', !!(window.jspdf) ? '✅' : '❌');
+        console.log('window.jsPDF:', !!(window.jsPDF) ? '✅' : '❌');
+        console.log('window.docx:', !!(window.docx) ? '✅' : '❌');
       });
     </script>
     
@@ -194,9 +194,9 @@
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/service-worker.js').then(registration => {
-            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            console.log('✅ ServiceWorker');
           }).catch(error => {
-            console.log('ServiceWorker registration failed: ', error);
+            console.log('❌ ServiceWorker: ', error);
           });
         });
       }
