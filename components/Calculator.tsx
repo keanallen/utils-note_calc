@@ -658,40 +658,60 @@ const Calculator: React.FC<CalculatorProps> = ({
   
   const handleEquals = useCallback(() => {
     const inputValue = parseFloat(currentInput.replace(/,/g, ''));
-    if (operator && previousValue !== null) {
-      const result = calculate(previousValue, inputValue, operator);
-      const formattedResult = formatNumber(result);
-      
-      // Create formatted formula for display
-      const rawFormula = expression + String(inputValue);
-      const formattedFormula = formatExpression(rawFormula);
-      
-      // Add to history
-      const historyEntry: HistoryEntry = {
-        id: Date.now(),
-        expression: formattedFormula,
-        result: formattedResult,
-        timestamp: new Date()
-      };
-      setHistory(prev => [historyEntry, ...prev]);
-      
-      // Trigger auto-insert if enabled
-      if (onCalculationResult) {
-        onCalculationResult(formattedResult);
-      }
-      
-      setResultFormula(formattedFormula);
-      setDisplay(formattedResult);
+    
+    // Validate inputs to prevent NaN results
+    if (isNaN(inputValue) || !operator || previousValue === null || isNaN(previousValue)) {
+      return; // Don't proceed with invalid state
+    }
+    
+    const result = calculate(previousValue, inputValue, operator);
+    
+    // Check if result is valid
+    if (isNaN(result)) {
+      setDisplay('Error');
+      setCurrentInput('0');
       setShowingResult(true);
       setExpression('');
-      setCurrentInput(String(result)); // Store raw result for further calculations
-      setLastAnswer(result); // Store for Ans button
+      setResultFormula('Math Error');
       setPreviousValue(null);
       setOperator(null);
       setWaitingForOperand(true);
       setShowingOperator(false);
-      setIsFormattedResult(true);
+      setIsFormattedResult(false);
+      return;
     }
+    
+    const formattedResult = formatNumber(result);
+    
+    // Create formatted formula for display
+    const rawFormula = expression + String(inputValue);
+    const formattedFormula = formatExpression(rawFormula);
+    
+    // Add to history
+    const historyEntry: HistoryEntry = {
+      id: Date.now(),
+      expression: formattedFormula,
+      result: formattedResult,
+      timestamp: new Date()
+    };
+    setHistory(prev => [historyEntry, ...prev]);
+    
+    // Trigger auto-insert if enabled
+    if (onCalculationResult) {
+      onCalculationResult(formattedResult);
+    }
+    
+    setResultFormula(formattedFormula);
+    setDisplay(formattedResult);
+    setShowingResult(true);
+    setExpression('');
+    setCurrentInput(String(result)); // Store raw result for further calculations
+    setLastAnswer(result); // Store for Ans button
+    setPreviousValue(null);
+    setOperator(null);
+    setWaitingForOperand(true);
+    setShowingOperator(false);
+    setIsFormattedResult(true);
   }, [expression, currentInput, operator, previousValue, onCalculationResult]);
 
   const handleClear = useCallback(() => {
@@ -832,14 +852,21 @@ const Calculator: React.FC<CalculatorProps> = ({
         setDisplay(formattedExpression + ' ' + formattedInput);
       }
     } else {
-      setCurrentInput('0');
+      // When currentInput is '0' or becomes '0', check if we have an expression to work with
       if (expression === '') {
+        // Already at initial state, do nothing
+        setCurrentInput('0');
         setDisplay('0');
+        setWaitingForOperand(true);
       } else {
-        const formattedExpression = formatExpression(expression.trim());
-        setDisplay(formattedExpression + ' 0');
+        // We have an expression, so this backspace should remove the current '0' and 
+        // continue from the operator state (like "100 + " waiting for next number)
+        setCurrentInput('0');
+        const formattedExpression = formatExpression(expression.slice(0, -3)); // Remove " + " part
+        setDisplay(formattedExpression + ' ' + expression.slice(-3)); // Show "100 + "
+        setWaitingForOperand(true);
+        setShowingOperator(true);
       }
-      setWaitingForOperand(true);
     }
   }, [expression, currentInput, showingOperator, showingResult]);
 
