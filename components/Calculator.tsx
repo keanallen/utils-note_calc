@@ -38,6 +38,12 @@ const formatDisplayNumber = (value: string): string => {
     return value;
   }
   
+  // Preserve trailing zeros in decimal numbers while typing
+  if (value.includes('.') && /\.\d*0$/.test(value)) {
+    // If it contains a decimal and ends with trailing zeros, preserve them
+    return value;
+  }
+  
   const num = parseFloat(value);
   if (isNaN(num)) return value;
   
