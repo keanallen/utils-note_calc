@@ -10,7 +10,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import { AddIcon } from './components/icons';
 import Router from './utils/router';
-import { loadNotesFromStorage, saveNotesToStorage, testLocalStorage } from './utils/storage';
+import { loadNotesFromStorage, saveNotesToStorage, testLocalStorage, SAVE_DEBOUNCE_DELAY } from './utils/storage';
 
 export interface CalculatorRef {
   handleKeyboardInput: (key: string) => void;
@@ -26,6 +26,8 @@ const App: React.FC = () => {
   const calculatorRefs = useRef<Map<number, CalculatorRef>>(new Map());
   const insertCalculationResultRef = useRef<((result: string) => void) | null>(null);
   const routerRef = useRef<Router | null>(null);
+  const [notesLoaded, setNotesLoaded] = useState<boolean>(false); // Track if notes have been loaded
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null); // For debounced saving
 
   // Initialize router
   useEffect(() => {
@@ -44,6 +46,73 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // Debounced save function
+  const debouncedSave = useCallback((notesToSave: string) => {
+    // Clear any existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Set a new timeout for debounced saving
+    saveTimeoutRef.current = setTimeout(() => {
+      const success = saveNotesToStorage(notesToSave);
+      if (!success) {
+        console.error('⚠️ Failed to save notes - data may be lost');
+      } else {
+        console.log(`💾 Notes saved (debounced): ${notesToSave.length} characters`);
+      }
+      saveTimeoutRef.current = null;
+    }, SAVE_DEBOUNCE_DELAY);
+
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        // Force immediate save on unmount
+        if (notesLoaded && notes) {
+          saveNotesToStorage(notes);
+          console.log('💾 Force saved notes on component unmount');
+        }
+      }
+    };
+  }, [notes, notesLoaded]);
+
+  // Save immediately when page is about to unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        // Force immediate save before page unload
+        if (notesLoaded && notes) {
+          saveNotesToStorage(notes);
+          console.log('💾 Force saved notes before page unload');
+        }
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden && saveTimeoutRef.current) {
+        // Page is being hidden, force save immediately
+        clearTimeout(saveTimeoutRef.current);
+        if (notesLoaded && notes) {
+          saveNotesToStorage(notes);
+          console.log('💾 Force saved notes on page visibility change');
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [notes, notesLoaded]);
+
   useEffect(() => {
     // Test localStorage functionality on app start
     const isStorageWorking = testLocalStorage();
@@ -53,20 +122,25 @@ const App: React.FC = () => {
     
     // Load saved notes
     const savedNotes = loadNotesFromStorage();
+    console.log('🔍 Attempting to load notes. Found:', savedNotes ? `${savedNotes.length} characters` : 'nothing');
+    
     if (savedNotes) {
       setNotes(savedNotes);
+      console.log('✅ Notes loaded successfully');
+    } else {
+      console.log('ℹ️ No saved notes found, starting fresh');
     }
+    
+    setNotesLoaded(true); // Mark notes as loaded
   }, []);
 
   useEffect(() => {
-    // Save notes whenever they change
-    if (notes !== '') { // Don't save empty notes on first load
-      const success = saveNotesToStorage(notes);
-      if (!success) {
-        console.error('⚠️ Failed to save notes - data may be lost');
-      }
+    // Only save notes after they've been initially loaded
+    if (notesLoaded) {
+      console.log(`🔄 Scheduling debounced save for ${notes.length} characters...`);
+      debouncedSave(notes);
     }
-  }, [notes]);
+  }, [notes, notesLoaded, debouncedSave]);
 
   // Handle keyboard events
   useEffect(() => {

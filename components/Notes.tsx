@@ -226,7 +226,35 @@ const Notes: React.FC<NotesProps> = ({ value, onChange, onFocus, onBlur, onInser
       
       quillInstance.current = quill;
     }
-  }, [value, onChange, onFocus, onBlur]);
+  }, [onChange, onFocus, onBlur]); // Remove 'value' from dependencies
+
+  // Separate useEffect to handle value changes (like loading from localStorage)
+  useEffect(() => {
+    if (quillInstance.current && value !== undefined) {
+      const currentContent = quillInstance.current.root.innerHTML;
+      // Only update if the value is different from current content
+      if (currentContent !== value) {
+        console.log('📝 Updating Quill editor with new content:', value ? `${value.length} characters` : 'empty');
+        
+        // Store current selection to restore after update
+        const selection = quillInstance.current.getSelection();
+        
+        // Update content
+        quillInstance.current.clipboard.dangerouslyPasteHTML(value);
+        
+        // Restore selection if it was valid
+        if (selection && value) {
+          const newLength = quillInstance.current.getLength();
+          const safeIndex = Math.min(selection.index, newLength - 1);
+          setTimeout(() => {
+            if (quillInstance.current) {
+              quillInstance.current.setSelection(safeIndex);
+            }
+          }, 0);
+        }
+      }
+    }
+  }, [value]);
 
   // Register the insert function with the parent component whenever autoInsertEnabled changes
   useEffect(() => {
