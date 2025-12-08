@@ -307,11 +307,11 @@ const App: React.FC = () => {
       case 'home':
         return renderHomePage();
       case 'features':
-        return <Features />;
+        return <Features onNavigate={handleNavigation} />;
       case 'use-cases':
-        return <UseCases />;
+        return <UseCases onNavigate={handleNavigation} />;
       case 'about':
-        return <About />;
+        return <About onNavigate={handleNavigation}  />;
       case 'privacy-policy':
         return <PrivacyPolicy onNavigate={handleNavigation} />;
       case 'terms-of-service':

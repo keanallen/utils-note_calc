@@ -21,6 +21,21 @@ const seoData = {
     title: "Terms of Service — Note Calc Terms & Conditions", 
     description: "Terms of service for Note Calc calculator and note-taking app. Free to use with clear guidelines for acceptable usage.",
     keywords: "terms of service, terms and conditions, calculator app terms, usage policy"
+  },
+  'about': {
+    title: "About — Note Calc Mission & Development",
+    description: "Learn about Note Calc's mission to revolutionize productivity with multi-calculator support and seamless note integration. Built for modern workflows.",
+    keywords: "about note calc, calculator app development, productivity mission, note taking innovation"
+  },
+  'features': {
+    title: "Features — Note Calc App",
+    description: "Discover Note Calc's powerful features: multiple calculator types, rich-text notes, offline support, keyboard shortcuts, and export options.",
+    keywords: "calculator features, note taking features, offline calculator, multi calculator, productivity tools"
+  },
+  'use-cases': {
+    title: "Use Cases — Note Calc for Students, Engineers & Professionals",
+    description: "See how Note Calc helps students solve math problems, engineers with calculations, accountants with financial data, and professionals boost productivity.",
+    keywords: "calculator for students, engineering calculator, accounting calculator, productivity use cases, math problem solving"
   }
 };
 
