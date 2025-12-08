@@ -166,19 +166,15 @@ const App: React.FC = () => {
   // Home page content (original calculator app)
   const renderHomePage = () => (
     <>
-      <header className="p-4 bg-gray-800/50 backdrop-blur-sm border-b border-gray-700 flex justify-between items-center sticky top-0 z-10">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold text-cyan-400">All-In-One Calculator and Note-Taking App</h1>
-        </div>
-        <button
+
+    <button
           onClick={addCalculator}
-          className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg flex items-center transition-transform transform hover:scale-105"
+          className="fixed bottom-10 md:bottom-16 right-6 bg-cyan-500 hover:bg-cyan-600 text-white rounded-full p-4 shadow-lg flex items-center transition-colors z-50"
           aria-label="Add new calculator"
         >
           <AddIcon />
           <span className="ml-2 hidden sm:inline">Add Calculator</span>
         </button>
-      </header>
 
       <section className="grow flex flex-col lg:flex-row p-4 sm:p-6 gap-6">
         <div className="grow lg:w-3/5 xl:w-2/3">

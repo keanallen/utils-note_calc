@@ -40,7 +40,8 @@ const Navigation: React.FC<NavProps> = ({ currentPage, onNavigate }) => {
                   target.src = '/assets/icon-192.png';
                 }}
               />
-              <span>Note Calc</span>
+              <h1>Note Calc</h1>
+              <h2 className="text-lg lg:inline-block hidden font-bold text-cyan-400">All-In-One Calculator and Note-Taking App</h2>
             </button>
           </div>
 
