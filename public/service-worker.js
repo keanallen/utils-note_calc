@@ -1,94 +1,48 @@
 
-const CACHE_NAME = 'pwa-calculator-notes-v1.2';
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/assets/icon-192.webp',
-  '/assets/icon-512.webp',
-  '/assets/icon-192.png', // Fallback
-  '/assets/icon-512.png', // Fallback
-  '/assets/banner-1200x630.png',
-  '/assets/calculator.png'
-];
+// Minimal service worker - No caching, just basic PWA functionality
+// Notes are saved automatically to localStorage
 
+console.log('Service Worker: No caching enabled - all requests go to network');
+
+// Install event - skip caching
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Opened cache');
-        // Cache files individually to handle failures gracefully
-        return Promise.allSettled(
-          urlsToCache.map(url => 
-            cache.add(url).catch(err => {
-              console.warn(`Failed to cache ${url}:`, err);
-              return null;
-            })
-          )
-        );
-      })
-      .then(() => {
-        console.log('Cache installation completed');
-        self.skipWaiting(); // Force the waiting service worker to become the active service worker
-      })
-      .catch(err => {
-        console.error('Cache installation failed:', err);
-      })
-  );
+  console.log('Service Worker: Installed (no cache)');
+  self.skipWaiting(); // Activate immediately
 });
 
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          console.log('Serving from cache:', event.request.url);
-          return response;
-        }
-        // If not in cache, fetch from network
-        console.log('Fetching from network:', event.request.url);
-        return fetch(event.request)
-          .then(response => {
-            // Don't cache if not a valid response
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-
-            // Clone the response since it can only be consumed once
-            const responseToCache = response.clone();
-
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-              });
-
-            return response;
-          })
-          .catch(err => {
-            console.error('Fetch failed:', err);
-            // You could return a fallback response here
-            throw err;
-          });
-      })
-  );
-});
-
+// Activate event - clean up any old caches
 self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME];
+  console.log('Service Worker: Activated');
+  
+  // Clear all existing caches
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            console.log('Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
+          console.log('Deleting cache:', cacheName);
+          return caches.delete(cacheName);
         })
       );
     })
     .then(() => {
-      console.log('Service worker activated');
+      console.log('Service Worker: All caches cleared');
       return self.clients.claim(); // Take control of all clients
     })
   );
 });
+
+// Fetch event - always fetch from network (no caching)
+self.addEventListener('fetch', event => {
+  // Just let all requests go through to the network
+  // No caching, no offline functionality
+  event.respondWith(fetch(event.request));
+});
+
+// Message event - for future communication between app and service worker
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+console.log('Service Worker: Ready - Notes will be saved to localStorage automatically');

@@ -10,6 +10,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import { AddIcon } from './components/icons';
 import Router from './utils/router';
+import { loadNotesFromStorage, saveNotesToStorage, testLocalStorage } from './utils/storage';
 
 export interface CalculatorRef {
   handleKeyboardInput: (key: string) => void;
@@ -44,21 +45,26 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    try {
-      const savedNotes = localStorage.getItem('pwa-calc-notes');
-      if (savedNotes) {
-        setNotes(savedNotes);
-      }
-    } catch (error) {
-      console.error("Failed to load notes from localStorage", error);
+    // Test localStorage functionality on app start
+    const isStorageWorking = testLocalStorage();
+    if (!isStorageWorking) {
+      console.error('⚠️ localStorage is not working - notes may not persist');
+    }
+    
+    // Load saved notes
+    const savedNotes = loadNotesFromStorage();
+    if (savedNotes) {
+      setNotes(savedNotes);
     }
   }, []);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('pwa-calc-notes', notes);
-    } catch (error) {
-      console.error("Failed to save notes to localStorage", error);
+    // Save notes whenever they change
+    if (notes !== '') { // Don't save empty notes on first load
+      const success = saveNotesToStorage(notes);
+      if (!success) {
+        console.error('⚠️ Failed to save notes - data may be lost');
+      }
     }
   }, [notes]);
 
