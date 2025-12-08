@@ -6,7 +6,10 @@ import Footer from './components/Footer';
 import Features from './pages/Features';
 import UseCases from './pages/UseCases';
 import About from './pages/About';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
 import { AddIcon } from './components/icons';
+import Router from './utils/router';
 
 export interface CalculatorRef {
   handleKeyboardInput: (key: string) => void;
@@ -21,6 +24,24 @@ const App: React.FC = () => {
   const [temporarilyInactiveCalculatorId, setTemporarilyInactiveCalculatorId] = useState<number | null>(null);
   const calculatorRefs = useRef<Map<number, CalculatorRef>>(new Map());
   const insertCalculationResultRef = useRef<((result: string) => void) | null>(null);
+  const routerRef = useRef<Router | null>(null);
+
+  // Initialize router
+  useEffect(() => {
+    const handleRouteChange = (route: string) => {
+      setCurrentPage(route);
+    };
+
+    const handleTitleChange = (title: string) => {
+      document.title = title;
+    };
+
+    routerRef.current = new Router(handleRouteChange, handleTitleChange);
+    
+    return () => {
+      // Cleanup if needed
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -129,7 +150,11 @@ const App: React.FC = () => {
 
   // Page navigation handler
   const handleNavigation = useCallback((page: string) => {
-    setCurrentPage(page);
+    if (routerRef.current) {
+      routerRef.current.navigate(page);
+    } else {
+      setCurrentPage(page);
+    }
   }, []);
 
   // Home page content (original calculator app)
@@ -211,6 +236,10 @@ const App: React.FC = () => {
         return <UseCases />;
       case 'about':
         return <About />;
+      case 'privacy-policy':
+        return <PrivacyPolicy onNavigate={handleNavigation} />;
+      case 'terms-of-service':
+        return <TermsOfService onNavigate={handleNavigation} />;
       default:
         return renderHomePage();
     }
@@ -222,7 +251,7 @@ const App: React.FC = () => {
       <main className="flex-1">
         {renderCurrentPage()}
       </main>
-      <Footer />
+      <Footer onNavigate={handleNavigation} />
     </div>
   );
 };
